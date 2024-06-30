@@ -7,6 +7,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
+func NewGenCmd() *cobra.Command {
+	return genCmd
+}
+
 var genCmd = &cobra.Command{
 	Use:   "gen",
 	Short: "Generate HTML from Markdown",
@@ -21,6 +25,3 @@ var genCmd = &cobra.Command{
 	},
 }
 
-func init() {
-	rootCmd.AddCommand(genCmd)
-}
