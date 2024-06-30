@@ -2,7 +2,10 @@ module github.com/adrianpk/gohermes
 
 go 1.22.3
 
-require github.com/spf13/cobra v1.8.1
+require (
+	github.com/russross/blackfriday/v2 v2.1.0
+	github.com/spf13/cobra v1.8.1
+)
 
 require (
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
