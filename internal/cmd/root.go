@@ -1,12 +1,16 @@
 package cmd
 
 import (
+	"log"
+
 	"github.com/spf13/cobra"
 )
 
 var rootCmd *cobra.Command
 
-func NewRootCmd() *cobra.Command {
+func NewRootCmd(ver string) *cobra.Command {
+	log.Println("hermes version:", ver)
+
 	if rootCmd == nil {
 		rootCmd = &cobra.Command{
 			Use:   "hermes",

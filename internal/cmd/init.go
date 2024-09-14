@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"embed"
-	"fmt"
+	"log"
 
 	"github.com/adrianpk/gohermes/internal/handler"
 	"github.com/spf13/cobra"
@@ -16,15 +16,18 @@ func NewInitCmd(layoutFS embed.FS) *cobra.Command {
 			dirs := []string{
 				"content",
 				"content/root",
-				"content/root/blog",
 				"content/root/pages",
+				"content/root/articles",
+				"content/root/blog",
 				"content/root/series",
-				"content/section/blog",
 				"content/section/pages",
+				"content/section/articles",
+				"content/section/blog",
 				"content/section/series",
 				"layout/default",
-				"layout/default/blog",
 				"layout/default/pages",
+				"layout/default/articles",
+				"layout/default/blog",
 				"layout/default/series",
 				"output",
 				"store",
@@ -32,11 +35,11 @@ func NewInitCmd(layoutFS embed.FS) *cobra.Command {
 
 			err := handler.InitDirs(dirs, layoutFS)
 			if err != nil {
-				fmt.Println("Error initializing directories:", err)
+				log.Println("Error initializing directories:", err)
 				return
 			}
 
-			fmt.Println("Directory structure initialized.")
+			log.Println("Directory structure initialized.")
 		},
 	}
 }
