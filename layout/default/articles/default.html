@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Page</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="font-sans bg-white text-gray-800">
+    <header class="flex items-center justify-between p-6 bg-white">
+        <div class="flex items-center space-x-4">
+            <a href="#" class="text-2xl font-bold text-gray-800">My Hermes Based Site</a>
+            <nav class="space-x-2">
+                <a href="#" class="text-gray-600 hover:text-gray-800">Home</a>
+                <a href="#" class="text-gray-600 hover:text-gray-800">About</a>
+            </nav>
+        </div>
+        <div class="flex items-center space-x-4">
+            <button class="text-gray-600 hover:text-gray-800">Sign in</button>
+            <button class="px-4 py-2 text-white bg-blue-600 rounded hover:bg-blue-700">Subscribe</button>
+        </div>
+    </header>
+    <main class="p-6">
+      {{content}}
+    </main>
+    <footer class="flex items-center justify-between p-6 bg-white">
+        <div>
+            &copy; 2024 My Hermes based site
+        </div>
+        <div>
+            Powered by Hermes
+        </div>
+    </footer>
+</body>
+</html>

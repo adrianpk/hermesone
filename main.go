@@ -6,11 +6,13 @@ import (
 	"github.com/adrianpk/gohermes/internal/cmd"
 )
 
-//go:embed layout/default/default.html
+const ver = "0.0.1"
+
+//go:embed layout/default
 var layoutFS embed.FS
 
 func main() {
-	rootCmd := cmd.NewRootCmd()
+	rootCmd := cmd.NewRootCmd(ver)
 	rootCmd.AddCommand(cmd.NewInitCmd(layoutFS))
 	rootCmd.AddCommand(cmd.NewGenCmd())	
 	rootCmd.Execute()
