@@ -8,12 +8,12 @@ import (
 
 const ver = "0.0.1"
 
-//go:embed layout/default
+//go:embed layout
 var layoutFS embed.FS
 
 func main() {
 	rootCmd := cmd.NewRootCmd(ver)
 	rootCmd.AddCommand(cmd.NewInitCmd(layoutFS))
-	rootCmd.AddCommand(cmd.NewGenCmd())	
+	rootCmd.AddCommand(cmd.NewGenCmd())
 	rootCmd.Execute()
 }

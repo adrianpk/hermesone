@@ -7,28 +7,25 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/adrianpk/gohermes/internal/fm"
-	"github.com/russross/blackfriday/v2"
+	"github.com/adrianpk/gohermes/internal/gen"
 )
 
-func GenerateHTML() error {
-	err := filepath.Walk("content/root", func(path string, info os.FileInfo, err error) error {
+func GenHTML() error {
+	return filepath.Walk("content/root", func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
 
 		if !info.IsDir() && filepath.Ext(path) == ".md" {
-			content, err := os.ReadFile(path)
+			fileContent, err := os.ReadFile(path)
 			if err != nil {
 				return err
 			}
 
-			parsed, err := fm.Preprocess(content)
+			content, err := gen.Process(fileContent)
 			if err != nil {
 				return err
 			}
-
-			html := blackfriday.Run(parsed.Markdown)
 
 			layoutPath := findLayout(path)
 			if layoutPath != "" {
@@ -37,59 +34,58 @@ func GenerateHTML() error {
 					return err
 				}
 
-				htmlStr := strings.Replace(string(layout), "{{content}}", string(html), 1)
+				outputHTML := string(layout)
 
-				meta := parsed.Metadata
-				htmlStr = strings.Replace(htmlStr, "{{title}}", meta.Title, 1)
-				htmlStr = strings.Replace(htmlStr, "{{description}}", meta.Description, 1)
-				htmlStr = strings.Replace(htmlStr, "{{date}}", meta.Date, 1)
-				htmlStr = strings.Replace(htmlStr, "{{publish-date}}", meta.PublishDate, 1)
-				htmlStr = strings.Replace(htmlStr, "{{last-modified}}", meta.LastModified, 1)
-				htmlStr = strings.Replace(htmlStr, "{{type}}", meta.Type, 1)
-				htmlStr = strings.Replace(htmlStr, "{{section}}", meta.Section, 1)
-				htmlStr = strings.Replace(htmlStr, "{{slug}}", meta.Slug, 1)
-				htmlStr = strings.Replace(htmlStr, "{{summary}}", meta.Summary, 1)
-				htmlStr = strings.Replace(htmlStr, "{{image}}", meta.Image, 1)
-				htmlStr = strings.Replace(htmlStr, "{{social-image}}", meta.SocialImage, 1)
-				htmlStr = strings.Replace(htmlStr, "{{layout}}", meta.Layout, 1)
-				htmlStr = strings.Replace(htmlStr, "{{canonical-url}}", meta.CanonicalURL, 1)
-				htmlStr = strings.Replace(htmlStr, "{{locale}}", meta.Locale, 1)
-				htmlStr = strings.Replace(htmlStr, "{{robots}}", meta.Robots, 1)
-				htmlStr = strings.Replace(htmlStr, "{{excerpt}}", meta.Excerpt, 1)
-				htmlStr = strings.Replace(htmlStr, "{{permalink}}", meta.Permalink, 1)
+				// Replace metadata
+				outputHTML = strings.Replace(outputHTML, "{{title}}", content.Meta.Title, -1)
+				outputHTML = strings.Replace(outputHTML, "{{description}}", content.Meta.Description, -1)
+				outputHTML = strings.Replace(outputHTML, "{{summary}}", content.Meta.Summary, -1)
+				outputHTML = strings.Replace(outputHTML, "{{date}}", content.Meta.Date, -1)
+				outputHTML = strings.Replace(outputHTML, "{{publish-date}}", content.Meta.PublishDate, -1)
+				outputHTML = strings.Replace(outputHTML, "{{last-modified}}", content.Meta.LastModified, -1)
+				outputHTML = strings.Replace(outputHTML, "{{type}}", content.Meta.Type, -1)
+				outputHTML = strings.Replace(outputHTML, "{{section}}", content.Meta.Section, -1)
+				outputHTML = strings.Replace(outputHTML, "{{slug}}", content.Meta.Slug, -1)
+				outputHTML = strings.Replace(outputHTML, "{{image}}", content.Meta.Image, -1)
+				outputHTML = strings.Replace(outputHTML, "{{social-image}}", content.Meta.SocialImage, -1)
+				outputHTML = strings.Replace(outputHTML, "{{layout}}", content.Meta.Layout, -1)
+				outputHTML = strings.Replace(outputHTML, "{{canonical-url}}", content.Meta.CanonicalURL, -1)
+				outputHTML = strings.Replace(outputHTML, "{{locale}}", content.Meta.Locale, -1)
+				outputHTML = strings.Replace(outputHTML, "{{robots}}", content.Meta.Robots, -1)
+				outputHTML = strings.Replace(outputHTML, "{{excerpt}}", content.Meta.Excerpt, -1)
+				outputHTML = strings.Replace(outputHTML, "{{permalink}}", content.Meta.Permalink, -1)
 
-				htmlStr = strings.Replace(htmlStr, "{{draft}}", fmt.Sprintf("%v", meta.Draft), 1)
-				htmlStr = strings.Replace(htmlStr, "{{table-of-contents}}", fmt.Sprintf("%v", meta.TableOfContents), 1)
-				htmlStr = strings.Replace(htmlStr, "{{share}}", fmt.Sprintf("%v", meta.Share), 1)
-				htmlStr = strings.Replace(htmlStr, "{{featured}}", fmt.Sprintf("%v", meta.Featured), 1)
-				htmlStr = strings.Replace(htmlStr, "{{comments}}", fmt.Sprintf("%v", meta.Comments), 1)
+				outputHTML = strings.Replace(outputHTML, "{{draft}}", fmt.Sprintf("%v", content.Meta.Draft), -1)
+				outputHTML = strings.Replace(outputHTML, "{{table-of-contents}}", fmt.Sprintf("%v", content.Meta.TableOfContents), -1)
+				outputHTML = strings.Replace(outputHTML, "{{share}}", fmt.Sprintf("%v", content.Meta.Share), -1)
+				outputHTML = strings.Replace(outputHTML, "{{featured}}", fmt.Sprintf("%v", content.Meta.Featured), -1)
+				outputHTML = strings.Replace(outputHTML, "{{comments}}", fmt.Sprintf("%v", content.Meta.Comments), -1)
 
-				htmlStr = strings.Replace(htmlStr, "{{authors}}", strings.Join(meta.Authors, ", "), 1)
-				htmlStr = strings.Replace(htmlStr, "{{categories}}", strings.Join(meta.Categories, ", "), 1)
-				htmlStr = strings.Replace(htmlStr, "{{tags}}", strings.Join(meta.Tags, ", "), 1)
-				htmlStr = strings.Replace(htmlStr, "{{keywords}}", strings.Join(meta.Keywords, ", "), 1)
+				outputHTML = strings.Replace(outputHTML, "{{authors}}", strings.Join(content.Meta.Authors, ", "), -1)
+				outputHTML = strings.Replace(outputHTML, "{{categories}}", strings.Join(content.Meta.Categories, ", "), -1)
+				outputHTML = strings.Replace(outputHTML, "{{tags}}", strings.Join(content.Meta.Tags, ", "), -1)
+				outputHTML = strings.Replace(outputHTML, "{{keywords}}", strings.Join(content.Meta.Keywords, ", "), -1)
 
-				htmlStr = strings.Replace(htmlStr, "{{sitemap.priority}}", fmt.Sprintf("%.2f", meta.Sitemap.Priority), 1)
-				htmlStr = strings.Replace(htmlStr, "{{sitemap.changefreq}}", meta.Sitemap.ChangeFreq, 1)
+				outputHTML = strings.Replace(outputHTML, "{{sitemap-priority}}", fmt.Sprintf("%.2f", content.Meta.Sitemap.Priority), -1)
+				outputHTML = strings.Replace(outputHTML, "{{sitemap-changefreq}}", content.Meta.Sitemap.ChangeFreq, -1)
 
-				html = []byte(htmlStr)
+				outputHTML = strings.Replace(outputHTML, "{{content}}", string(content.HTML), 1)
+
+				html := []byte(outputHTML)
+				outputPath := filepath.Join("output", filepath.Base(path[:len(path)-3]+".html"))
+				err = os.WriteFile(outputPath, html, 0644)
+				if err != nil {
+					return err
+				}
+
+				fmt.Printf("Generated HTML for: %s\n", outputPath)
 			} else {
-				log.Println("No layout found for:", path)
-			}
-
-			outputPath := "output/" + filepath.Base(path)
-			outputPath = outputPath[:len(outputPath)-3] + ".html"
-
-			err = os.WriteFile(outputPath, html, 0644)
-			if err != nil {
-				return err
+				fmt.Println("No layout found for:", path)
 			}
 		}
 
 		return nil
 	})
-
-	return err
 }
 
 func findLayout(path string) string {
