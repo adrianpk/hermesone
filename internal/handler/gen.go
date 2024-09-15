@@ -1,7 +1,8 @@
 package handler
 
 import (
-	"fmt"
+	"bytes"
+	"html/template"
 	"log"
 	"os"
 	"path/filepath"
@@ -29,58 +30,35 @@ func GenHTML() error {
 
 			layoutPath := findLayout(path)
 			if layoutPath != "" {
-				layout, err := os.ReadFile(layoutPath)
+				tmpl, err := template.New("webpage").Funcs(template.FuncMap{
+					"safeHTML": func(s string) template.HTML { return template.HTML(s) },
+				}).ParseFiles(layoutPath)
 				if err != nil {
+					log.Printf("Error parsing template files: %v\n", err)
 					return err
 				}
 
-				outputHTML := string(layout)
+				var tmplBuf bytes.Buffer
+				err = tmpl.Execute(&tmplBuf, content)
+				if err != nil {
+					log.Printf("Error executing template: %v\n", err)
+					return err
+				}
 
-				// Replace metadata
-				outputHTML = strings.Replace(outputHTML, "{{title}}", content.Meta.Title, -1)
-				outputHTML = strings.Replace(outputHTML, "{{description}}", content.Meta.Description, -1)
-				outputHTML = strings.Replace(outputHTML, "{{summary}}", content.Meta.Summary, -1)
-				outputHTML = strings.Replace(outputHTML, "{{date}}", content.Meta.Date, -1)
-				outputHTML = strings.Replace(outputHTML, "{{publish-date}}", content.Meta.PublishDate, -1)
-				outputHTML = strings.Replace(outputHTML, "{{last-modified}}", content.Meta.LastModified, -1)
-				outputHTML = strings.Replace(outputHTML, "{{type}}", content.Meta.Type, -1)
-				outputHTML = strings.Replace(outputHTML, "{{section}}", content.Meta.Section, -1)
-				outputHTML = strings.Replace(outputHTML, "{{slug}}", content.Meta.Slug, -1)
-				outputHTML = strings.Replace(outputHTML, "{{image}}", content.Meta.Image, -1)
-				outputHTML = strings.Replace(outputHTML, "{{social-image}}", content.Meta.SocialImage, -1)
-				outputHTML = strings.Replace(outputHTML, "{{layout}}", content.Meta.Layout, -1)
-				outputHTML = strings.Replace(outputHTML, "{{canonical-url}}", content.Meta.CanonicalURL, -1)
-				outputHTML = strings.Replace(outputHTML, "{{locale}}", content.Meta.Locale, -1)
-				outputHTML = strings.Replace(outputHTML, "{{robots}}", content.Meta.Robots, -1)
-				outputHTML = strings.Replace(outputHTML, "{{excerpt}}", content.Meta.Excerpt, -1)
-				outputHTML = strings.Replace(outputHTML, "{{permalink}}", content.Meta.Permalink, -1)
-
-				outputHTML = strings.Replace(outputHTML, "{{draft}}", fmt.Sprintf("%v", content.Meta.Draft), -1)
-				outputHTML = strings.Replace(outputHTML, "{{table-of-contents}}", fmt.Sprintf("%v", content.Meta.TableOfContents), -1)
-				outputHTML = strings.Replace(outputHTML, "{{share}}", fmt.Sprintf("%v", content.Meta.Share), -1)
-				outputHTML = strings.Replace(outputHTML, "{{featured}}", fmt.Sprintf("%v", content.Meta.Featured), -1)
-				outputHTML = strings.Replace(outputHTML, "{{comments}}", fmt.Sprintf("%v", content.Meta.Comments), -1)
-
-				outputHTML = strings.Replace(outputHTML, "{{authors}}", strings.Join(content.Meta.Authors, ", "), -1)
-				outputHTML = strings.Replace(outputHTML, "{{categories}}", strings.Join(content.Meta.Categories, ", "), -1)
-				outputHTML = strings.Replace(outputHTML, "{{tags}}", strings.Join(content.Meta.Tags, ", "), -1)
-				outputHTML = strings.Replace(outputHTML, "{{keywords}}", strings.Join(content.Meta.Keywords, ", "), -1)
-
-				outputHTML = strings.Replace(outputHTML, "{{sitemap-priority}}", fmt.Sprintf("%.2f", content.Meta.Sitemap.Priority), -1)
-				outputHTML = strings.Replace(outputHTML, "{{sitemap-changefreq}}", content.Meta.Sitemap.ChangeFreq, -1)
-
-				outputHTML = strings.Replace(outputHTML, "{{content}}", string(content.HTML), 1)
-
-				html := []byte(outputHTML)
 				outputPath := filepath.Join("output", filepath.Base(path[:len(path)-3]+".html"))
-				err = os.WriteFile(outputPath, html, 0644)
+				outputFile, err := os.Create(outputPath)
+				if err != nil {
+					return err
+				}
+				defer outputFile.Close()
+
+				_, err = tmplBuf.WriteTo(outputFile)
 				if err != nil {
 					return err
 				}
 
-				fmt.Printf("Generated HTML for: %s\n", outputPath)
 			} else {
-				fmt.Println("No layout found for:", path)
+				log.Println("No layout found for:", path)
 			}
 		}
 
@@ -102,10 +80,7 @@ func findLayout(path string) string {
 
 	for _, layoutPath := range layoutPaths {
 		if _, err := os.Stat(layoutPath); err == nil {
-			log.Println("found layout:", layoutPath)
 			return layoutPath
-		} else {
-			log.Println("layout not found:", layoutPath)
 		}
 	}
 

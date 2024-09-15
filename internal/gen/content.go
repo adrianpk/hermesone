@@ -3,7 +3,7 @@ package gen
 type Content struct {
 	Meta     Meta
 	Markdown []byte
-	HTML     []byte
+	HTML     string
 }
 
 type Meta struct {

@@ -25,7 +25,7 @@ func Process(content []byte) (Content, error) {
 		parsed.Markdown = content
 	}
 
-	parsed.HTML = blackfriday.Run(parsed.Markdown)
+	parsed.HTML = string(blackfriday.Run(parsed.Markdown))
 
 	return parsed, nil
 }
