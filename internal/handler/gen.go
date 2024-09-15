@@ -8,62 +8,86 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/adrianpk/gohermes/internal/gen"
+	"github.com/adrianpk/gohermes/internal/hermes"
+)
+
+const (
+	contentRoot = "content/root"
 )
 
 func GenHTML() error {
-	return filepath.Walk("content/root", func(path string, info os.FileInfo, err error) error {
+	return filepath.Walk(contentRoot, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
 
 		if !info.IsDir() && filepath.Ext(path) == ".md" {
-			fileContent, err := os.ReadFile(path)
-			if err != nil {
-				return err
-			}
+			outputPath := filepath.Join("output", filepath.Base(path[:len(path)-3]+".html"))
 
-			content, err := gen.Process(fileContent)
-			if err != nil {
-				return err
-			}
-
-			layoutPath := findLayout(path)
-			if layoutPath != "" {
-				tmpl, err := template.New("webpage").Funcs(template.FuncMap{
-					"safeHTML": func(s string) template.HTML { return template.HTML(s) },
-				}).ParseFiles(layoutPath)
-				if err != nil {
-					log.Printf("Error parsing template files: %v\n", err)
-					return err
-				}
-
-				var tmplBuf bytes.Buffer
-				err = tmpl.Execute(&tmplBuf, content)
-				if err != nil {
-					log.Printf("Error executing template: %v\n", err)
-					return err
-				}
-
-				outputPath := filepath.Join("output", filepath.Base(path[:len(path)-3]+".html"))
-				outputFile, err := os.Create(outputPath)
-				if err != nil {
-					return err
-				}
-				defer outputFile.Close()
-
-				_, err = tmplBuf.WriteTo(outputFile)
+			if shouldRender(path, outputPath) {
+				fileContent, err := os.ReadFile(path)
 				if err != nil {
 					return err
 				}
 
-			} else {
-				log.Println("No layout found for:", path)
+				content, err := hermes.Parse(fileContent)
+				if err != nil {
+					return err
+				}
+
+				layoutPath := findLayout(path)
+				if layoutPath != "" {
+					tmpl, err := template.New("webpage").Funcs(template.FuncMap{
+						"safeHTML": func(s string) template.HTML { return template.HTML(s) },
+					}).ParseFiles(layoutPath)
+
+					if err != nil {
+						log.Printf("error parsing template files: %v\n", err)
+						return err
+					}
+
+					var tmplBuf bytes.Buffer
+					err = tmpl.Execute(&tmplBuf, content)
+					if err != nil {
+						log.Printf("error executing template: %v\n", err)
+						return err
+					}
+
+					outputFile, err := os.Create(outputPath)
+					if err != nil {
+						return err
+					}
+					defer outputFile.Close()
+
+					_, err = tmplBuf.WriteTo(outputFile)
+					if err != nil {
+						return err
+					}
+
+				} else {
+					log.Println("no layout found for:", path)
+				}
 			}
 		}
 
 		return nil
 	})
+}
+
+func shouldRender(mdPath, htmlPath string) bool {
+	htmlInfo, err := os.Stat(htmlPath)
+	if os.IsNotExist(err) {
+		return true
+	}
+
+	markdownInfo, err := os.Stat(mdPath)
+	if err != nil {
+		return false
+	}
+
+	render := markdownInfo.ModTime().After(htmlInfo.ModTime())
+
+	return render
 }
 
 func findLayout(path string) string {

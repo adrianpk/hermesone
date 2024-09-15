@@ -1,4 +1,4 @@
-package gen
+package hermes
 
 import (
 	"bytes"
@@ -7,7 +7,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func Process(content []byte) (Content, error) {
+func Parse(content []byte) (Content, error) {
 	var parsed Content
 
 	if bytes.HasPrefix(content, []byte("---\n")) {
