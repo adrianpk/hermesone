@@ -7,36 +7,36 @@ type Content struct {
 }
 
 type Meta struct {
-	Title           string
-	Description     string
-	Summary         string
-	Date            string
-	PublishDate     string
-	LastModified    string
-	Type            string
-	Section         string
-	Slug            string
-	Image           string
-	SocialImage     string
-	Layout          string
-	CanonicalURL    string
-	Locale          string
-	Robots          string
-	Excerpt         string
-	Permalink       string
-	Draft           bool
-	TableOfContents bool
-	Share           bool
-	Featured        bool
-	Comments        bool
-	Authors         []string
-	Categories      []string
-	Tags            []string
-	Keywords        []string
-	Sitemap         Sitemap
+	Title           string   `yaml:"title"`
+	Description     string   `yaml:"description"`
+	Summary         string   `yaml:"summary"`
+	Date            string   `yaml:"date"`
+	PublishDate     string   `yaml:"publish-date"`
+	LastModified    string   `yaml:"last-modified"`
+	Type            string   `yaml:"type"`
+	Section         string   `yaml:"section"`
+	Slug            string   `yaml:"slug"`
+	Image           string   `yaml:"image"`
+	SocialImage     string   `yaml:"social-image"`
+	Layout          string   `yaml:"layout"`
+	CanonicalURL    string   `yaml:"canonical-url"`
+	Locale          string   `yaml:"locale"`
+	Robots          string   `yaml:"robots"`
+	Excerpt         string   `yaml:"excerpt"`
+	Permalink       string   `yaml:"permalink"`
+	Draft           bool     `yaml:"draft"`
+	TableOfContents bool     `yaml:"table-of-contents"`
+	Share           bool     `yaml:"share"`
+	Featured        bool     `yaml:"featured"`
+	Comments        bool     `yaml:"comments"`
+	Authors         []string `yaml:"author"`
+	Categories      []string `yaml:"categories"`
+	Tags            []string `yaml:"tags"`
+	Keywords        []string `yaml:"keywords"`
+	Sitemap         Sitemap  `yaml:"sitemap"`
 }
 
 type Sitemap struct {
-	Priority   float64
-	ChangeFreq string
+	Priority   float64 `yaml:"priority"`
+	ChangeFreq string  `yaml:"changefreq"`
 }
