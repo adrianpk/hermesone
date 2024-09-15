@@ -35,6 +35,11 @@ func GenHTML() error {
 					return err
 				}
 
+				err = hermes.UpdateSection(path, &content.Meta)
+				if err != nil {
+					return err
+				}
+
 				layoutPath := findLayout(path)
 				if layoutPath != "" {
 					tmpl, err := template.New("webpage").Funcs(template.FuncMap{
