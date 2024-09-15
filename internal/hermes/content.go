@@ -1,4 +1,4 @@
-package gen
+package hermes
 
 type Content struct {
 	Meta     Meta
