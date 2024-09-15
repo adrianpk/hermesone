@@ -1,28 +1,29 @@
+{{define "webpage"}}
 <!DOCTYPE html>
-<html lang="{{locale}}">
+<html lang="{{.Meta.Locale}}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{title}}</title>
+    <title>{{.Meta.Title}}</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <meta name="description" content="{{description}}">
-    <meta name="keywords" content="{{keywords}}">
-    <meta name="author" content="{{authors}}">
-    <meta name="date" content="{{date}}">
-    <meta name="publish-date" content="{{publish-date}}">
-    <meta name="last-modified" content="{{last-modified}}">
-    <meta name="robots" content="{{robots}}">
-    <link rel="canonical" href="{{canonical-url}}">
-    <meta property="og:title" content="{{title}}">
-    <meta property="og:description" content="{{description}}">
-    <meta property="og:image" content="{{social-image}}">
-    <meta property="og:url" content="{{permalink}}">
-    <meta property="og:type" content="{{type}}">
+    <meta name="description" content="{{.Meta.Description}}">
+    <meta name="keywords" content="{{range .Meta.Keywords}}{{.}},{{end}}">
+    <meta name="author" content="{{range .Meta.Authors}}{{.}},{{end}}">
+    <meta name="date" content="{{.Meta.Date}}">
+    <meta name="publish-date" content="{{.Meta.PublishDate}}">
+    <meta name="last-modified" content="{{.Meta.LastModified}}">
+    <meta name="robots" content="{{.Meta.Robots}}">
+    <link rel="canonical" href="{{.Meta.CanonicalURL}}">
+    <meta property="og:title" content="{{.Meta.Title}}">
+    <meta property="og:description" content="{{.Meta.Description}}">
+    <meta property="og:image" content="{{.Meta.SocialImage}}">
+    <meta property="og:url" content="{{.Meta.Permalink}}">
+    <meta property="og:type" content="{{.Meta.Type}}">
 </head>
 <body class="font-sans bg-white text-gray-800">
 <header class="flex items-center justify-between p-6 bg-white">
     <div class="flex items-center space-x-4">
-        <a href="#" class="text-2xl font-bold text-gray-800">{{title}}</a>
+        <a href="#" class="text-2xl font-bold text-gray-800">{{.Meta.Title}}</a>
         <nav class="space-x-2">
             <a href="#" class="text-gray-600 hover:text-gray-800">Home</a>
             <a href="#" class="text-gray-600 hover:text-gray-800">About</a>
@@ -34,30 +35,31 @@
     </div>
 </header>
 <main class="p-6">
-    <h1 class="text-3xl font-bold mb-4">{{title}}</h1>
-    <p class="text-gray-600 mb-4">{{summary}}</p>
+    <h1 class="text-3xl font-bold mb-4">{{.Meta.Title}}</h1>
+    <p class="text-gray-600 mb-4">{{.Meta.Summary}}</p>
     <p class="text-sm text-gray-500 mb-4">
-        By {{authors}} |
-        Published: {{publish-date}} |
-        Last Modified: {{last-modified}}
+        By {{range .Meta.Authors}}{{.}},{{end}} |
+        Published: {{.Meta.PublishDate}} |
+        Last Modified: {{.Meta.LastModified}}
     </p>
     <div class="mb-4">
-        <strong>Categories:</strong> {{categories}}<br>
-        <strong>Tags:</strong> {{tags}}
+        <strong>Categories:</strong> {{range .Meta.Categories}}{{.}},{{end}}<br>
+        <strong>Tags:</strong> {{range .Meta.Tags}}{{.}},{{end}}
     </div>
-    {{content}}
+    {{.HTML | safeHTML}}
 </main>
 <footer class="flex items-center justify-between p-6 bg-white">
     <div>
-        &copy; 2024 {{title}}
+        &copy; 2024 {{.Meta.Title}}
     </div>
     <div>
         Powered by Hermes |
-        Type: {{type}} |
-        Section: {{section}} |
-        Sitemap Priority: {{sitemap-priority}} |
-        Change Frequency: {{sitemap-changefreq}}
+        Type: {{.Meta.Type}} |
+        Section: {{.Meta.Section}} |
+        Sitemap Priority: {{.Meta.Sitemap.Priority}} |
+        Change Frequency: {{.Meta.Sitemap.ChangeFreq}}
     </div>
 </footer>
 </body>
 </html>
+{{end}}
