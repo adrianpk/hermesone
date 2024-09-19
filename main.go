@@ -15,5 +15,6 @@ func main() {
 	rootCmd := cmd.NewRootCmd(ver)
 	rootCmd.AddCommand(cmd.NewInitCmd(layoutFS))
 	rootCmd.AddCommand(cmd.NewGenCmd())
+	rootCmd.AddCommand(cmd.NewUpgradeCmd(layoutFS))
 	rootCmd.Execute()
 }

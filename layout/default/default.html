@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{.Meta.Title}}</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/themes/prism-tomorrow.min.css" rel="stylesheet">
     <meta name="description" content="{{.Meta.Description}}">
     <meta name="keywords" content="{{range .Meta.Keywords}}{{.}},{{end}}">
     <meta name="author" content="{{range .Meta.Authors}}{{.}},{{end}}">
@@ -19,6 +20,20 @@
     <meta property="og:image" content="{{.Meta.SocialImage}}">
     <meta property="og:url" content="{{.Meta.Permalink}}">
     <meta property="og:type" content="{{.Meta.Type}}">
+    <style>
+        /* Custom CSS for terminal-like appearance */
+        pre[class*="language-"] {
+            background: #1a1b26; /* Tokyo Night background color */
+            color: #c0caf5; /* Tokyo Night text color */
+            font-family: 'Fira Code', monospace;
+            padding: 1em;
+            border-radius: 0.5em;
+            overflow: auto;
+        }
+        code[class*="language-"] {
+            font-family: 'Fira Code', monospace;
+        }
+    </style>
 </head>
 <body class="font-sans bg-white text-gray-800">
 <header class="flex items-center justify-between p-6 bg-white">
@@ -60,6 +75,9 @@
         Change Frequency: {{.Meta.Sitemap.ChangeFreq}}
     </div>
 </footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/components/prism-bash.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/components/prism-go.min.js"></script>
 </body>
 </html>
 {{end}}
