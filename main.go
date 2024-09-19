@@ -2,6 +2,8 @@ package main
 
 import (
 	"embed"
+	"fmt"
+	"os"
 
 	"github.com/adrianpk/gohermes/internal/cmd"
 )
@@ -16,5 +18,15 @@ func main() {
 	rootCmd.AddCommand(cmd.NewInitCmd(layoutFS))
 	rootCmd.AddCommand(cmd.NewGenCmd())
 	rootCmd.AddCommand(cmd.NewUpgradeCmd(layoutFS))
-	rootCmd.Execute()
+	rootCmd.AddCommand(cmd.NewNewCmd())
+
+	if len(os.Args) > 1 && os.Args[1] == "help" {
+		rootCmd.Usage()
+		return
+	}
+
+	if err := rootCmd.Execute(); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 }

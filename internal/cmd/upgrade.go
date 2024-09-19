@@ -2,8 +2,9 @@ package cmd
 
 import (
 	"embed"
-	"github.com/spf13/cobra"
+
 	"github.com/adrianpk/gohermes/internal/handler"
+	"github.com/spf13/cobra"
 )
 
 func NewUpgradeCmd(layoutFS embed.FS) *cobra.Command {
@@ -12,9 +13,9 @@ func NewUpgradeCmd(layoutFS embed.FS) *cobra.Command {
 		Short: "upgrade the existing layout structure",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			dirs := []string{
-				"layout/default/articles",
+				"layout/default/article",
 				"layout/default/blog",
-				"layout/default/pages",
+				"layout/default/page",
 				"layout/default/series",
 			}
 			return handler.Upgrade(dirs, layoutFS)
