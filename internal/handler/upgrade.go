@@ -7,9 +7,16 @@ import (
 	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/adrianpk/gohermes/internal/hermes"
 )
 
 func Upgrade(dirs []string, layoutFS embed.FS) error {
+	err := hermes.CheckHermes()
+	if err != nil {
+		return err
+	}
+
 	for _, dir := range dirs {
 		log.Printf("creating directory: %s", dir)
 		err := os.MkdirAll(dir, 0755)
@@ -20,9 +27,9 @@ func Upgrade(dirs []string, layoutFS embed.FS) error {
 
 	files := []string{
 		"layout/default/default.html",
-		"layout/default/articles/default.html",
+		"layout/default/article/default.html",
 		"layout/default/blog/default.html",
-		"layout/default/pages/default.html",
+		"layout/default/page/default.html",
 		"layout/default/series/default.html",
 	}
 
@@ -47,6 +54,7 @@ func Upgrade(dirs []string, layoutFS embed.FS) error {
 		}
 
 		log.Printf("writing file: %s", file)
+
 		err = os.WriteFile(file, content, 0644)
 		if err != nil {
 			return fmt.Errorf("failed to write file %s: %w", file, err)
