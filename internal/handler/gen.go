@@ -12,17 +12,22 @@ import (
 )
 
 const (
-	contentRoot = "content/root"
+	contentRoot = "content"
 )
 
 func GenHTML() error {
-	return filepath.Walk(contentRoot, func(path string, info os.FileInfo, err error) error {
+	err := filepath.Walk(contentRoot, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
 
 		if !info.IsDir() && filepath.Ext(path) == ".md" {
-			outputPath := filepath.Join("output", filepath.Base(path[:len(path)-3]+".html"))
+			relativePath, err := filepath.Rel(contentRoot, path)
+			if err != nil {
+				return err
+			}
+
+			outputPath := determineOutputPath(relativePath)
 
 			if shouldRender(path, outputPath) {
 				fileContent, err := os.ReadFile(path)
@@ -58,6 +63,11 @@ func GenHTML() error {
 						return err
 					}
 
+					err = os.MkdirAll(filepath.Dir(outputPath), os.ModePerm)
+					if err != nil {
+						return err
+					}
+
 					outputFile, err := os.Create(outputPath)
 					if err != nil {
 						return err
@@ -77,6 +87,31 @@ func GenHTML() error {
 
 		return nil
 	})
+
+	return err
+}
+
+func determineOutputPath(relativePath string) string {
+	parts := strings.Split(relativePath, string(os.PathSeparator))
+	if len(parts) < 2 {
+		return filepath.Join("output", relativePath[:len(relativePath)-3]+".html")
+	}
+
+	section := parts[0]
+	subdir := parts[1]
+
+	switch section {
+	case "root":
+		if subdir == "blog" || subdir == "series" {
+			return filepath.Join("output", subdir, relativePath[len(section)+len(subdir)+2:len(relativePath)-3]+".html")
+		}
+		return filepath.Join("output", relativePath[len(section)+len(subdir)+2:len(relativePath)-3]+".html")
+	default:
+		if subdir == "blog" || subdir == "series" {
+			return filepath.Join("output", section, subdir, relativePath[len(section)+len(subdir)+2:len(relativePath)-3]+".html")
+		}
+		return filepath.Join("output", section, relativePath[len(section)+len(subdir)+2:len(relativePath)-3]+".html")
+	}
 }
 
 func shouldRender(mdPath, htmlPath string) bool {
