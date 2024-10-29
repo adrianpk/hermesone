@@ -17,7 +17,7 @@ var genCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		err := handler.GenHTML()
 		if err != nil {
-			log.Println("Error generating HTML:", err)
+			log.Println("error generating HTML:", err)
 			return
 		}
 
