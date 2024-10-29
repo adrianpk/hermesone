@@ -111,20 +111,21 @@ func NewNewCmd() *cobra.Command {
 				Slug:         slug,
 				Authors:      authors,
 				Tags:         tags,
+				Draft:        true,
 			}
 
 			metaData, err := yaml.Marshal(meta)
 			if err != nil {
-				log.Fatalf("Error: failed to marshal meta: %v", err)
+				log.Fatalf("error: failed to marshal meta: %v", err)
 			}
 
 			content := fmt.Sprintf("---\n%s---\n# %s\n", string(metaData), name)
 			err = os.WriteFile(filePath, []byte(content), 0644)
 			if err != nil {
-				log.Fatalf("Error: failed to write file: %v", err)
+				log.Fatalf("error writing file: %v", err)
 			}
 
-			log.Printf("Success: new content created at %s", filePath)
+			log.Printf("new content created at %s", filePath)
 		},
 	}
 
