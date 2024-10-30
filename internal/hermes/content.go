@@ -34,6 +34,7 @@ type Meta struct {
 	Tags            []string `yaml:"tags"` // Tags of the content
 	Keywords        []string `yaml:"keywords"`
 	Sitemap         Sitemap  `yaml:"sitemap"`
+	Debug           bool     `yaml:"debug"`
 }
 
 type Sitemap struct {
