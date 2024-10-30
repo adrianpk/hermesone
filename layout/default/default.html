@@ -20,26 +20,11 @@
     <meta property="og:image" content="{{.Meta.SocialImage}}">
     <meta property="og:url" content="{{.Meta.Permalink}}">
     <meta property="og:type" content="{{.Meta.Type}}">
-    <style>
-        /* Custom CSS for terminal-like appearance */
-        pre[class*="language-"] {
-            background: #1a1b26; /* Tokyo Night background color */
-            color: #c0caf5; /* Tokyo Night text color */
-            font-family: 'Fira Code', monospace;
-            padding: 1em;
-            border-radius: 0.5em;
-            overflow: auto;
-        }
-        code[class*="language-"] {
-            font-family: 'Fira Code', monospace;
-        }
-    </style>
 </head>
 <body class="font-sans bg-white text-gray-800">
-<header class="flex items-center justify-between p-6 bg-white">
+<header class="flex items-center justify-between p-6 bg-white border-b border-gray-200">
     <div class="flex items-center space-x-4">
-        <a href="#" class="text-2xl font-bold text-gray-800">{{.Meta.Title}}</a>
-        <nav class="space-x-2">
+        <nav class="space-x-4">
             <a href="#" class="text-gray-600 hover:text-gray-800">Home</a>
             <a href="#" class="text-gray-600 hover:text-gray-800">About</a>
         </nav>
@@ -49,24 +34,27 @@
         <button class="px-4 py-2 text-white bg-blue-600 rounded hover:bg-blue-700">Subscribe</button>
     </div>
 </header>
-<main class="p-6">
-    <h1 class="text-3xl font-bold mb-4">{{.Meta.Title}}</h1>
-    <p class="text-gray-600 mb-4">{{.Meta.Summary}}</p>
-    <p class="text-sm text-gray-500 mb-4">
+<main class="max-w-4xl mx-auto p-6">
+    <h1 class="text-5xl font-bold mb-8 text-center text-gray-900">{{.Meta.Title}}</h1>
+    <p class="text-2xl text-gray-700 mb-8 text-center italic">{{.Meta.Summary}}</p>
+    <p class="text-sm text-gray-500 mb-8 text-center">
         By {{range .Meta.Authors}}{{.}},{{end}} |
         Published: {{.Meta.PublishDate}} |
         Last Modified: {{.Meta.LastModified}}
     </p>
-    <div class="mb-4">
+    <div class="mb-8 text-center">
         <strong>Categories:</strong> {{range .Meta.Categories}}{{.}},{{end}}<br>
         <strong>Tags:</strong> {{range .Meta.Tags}}{{.}},{{end}}
     </div>
-    {{.HTML | safeHTML}}
+    <article class="prose lg:prose-xl mx-auto">
+        {{.HTML | safeHTML}}
+    </article>
 </main>
-<footer class="flex items-center justify-between p-6 bg-white">
+<footer class="flex items-center justify-between p-6 bg-white border-t border-gray-200">
     <div>
         &copy; 2024 {{.Meta.Title}}
     </div>
+    {{ if .Meta.Debug }}
     <div>
         Powered by Hermes |
         Type: {{.Meta.Type}} |
@@ -74,6 +62,7 @@
         Sitemap Priority: {{.Meta.Sitemap.Priority}} |
         Change Frequency: {{.Meta.Sitemap.ChangeFreq}}
     </div>
+    {{ end }}
 </footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/prism.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/components/prism-bash.min.js"></script>
