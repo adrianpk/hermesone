@@ -98,7 +98,7 @@ func GenHTML() error {
 		return err
 	}
 
-	log.Println("HTML generated and .nojekyll file added.")
+	log.Println("content generated!")
 	return nil
 }
 

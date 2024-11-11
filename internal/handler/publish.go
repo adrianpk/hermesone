@@ -7,13 +7,17 @@ import (
 )
 
 func Publish() error {
-	err := hermes.PublishToGitHubPages()
+	config, err := hermes.LoadConfig()
 	if err != nil {
-		log.Fatalf("publish error: %v", err)
 		return err
 	}
 
-	log.Println("published to GitHub Pages")
+	err = hermes.PublishToGitHubPages(config)
+	if err != nil {
+		return err
+	}
+
+	log.Println("published!")
+
 	return nil
 }
-

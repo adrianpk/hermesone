@@ -10,27 +10,23 @@ import (
 )
 
 const (
-	outputDir   = "output"
-	// Following values are hardocoded for now but they will be configurable soon.
-	repoURL     = "https://github.com/adrianpk/adrianpk.github.io"
-	branch      = "gh-pages"
-	sourceBranch = "main"
+	outputDir = "output"
+	repo    = "https://github.com/adrianpk/adrianpk.github.io"
+	pubBranch  = "gh-pages"
+	mainBranch = "main"
 )
 
-func runCommand(name string, args ...string) (string, string, error) {
-	cmd := exec.Command(name, args...)
-	var out bytes.Buffer
-	var stderr bytes.Buffer
-	cmd.Stdout = &out
-	cmd.Stderr = &stderr
-	err := cmd.Run()
-	if err != nil {
-		return out.String(), stderr.String(), fmt.Errorf("%s: %s", err, stderr.String())
-	}
-	return out.String(), stderr.String(), nil
+type Options struct {
+	RepoURL   string
+	PubBranch string
+	MainBranch string
 }
 
-func PublishToGitHubPages() error {
+func PublishToGitHubPages(cfg Config) error {
+	repoURL := cfg.RepoURL()
+	pubBranch := cfg.Repo.Pub
+	mainBranch := cfg.Repo.Main
+
 	err := os.Chdir(outputDir)
 	if err != nil {
 		return err
@@ -66,14 +62,14 @@ func PublishToGitHubPages() error {
 		return fmt.Errorf("git commit error: %s: stdout: %s, stderr: %s", err, stdout, stderr)
 	}
 
-	stdout, stderr, err = runCommand("git", "pull", "origin", branch, "--rebase")
-	if err != nil && strings.Contains(stderr, fmt.Sprintf("couldn't find remote ref %s", branch)) {
-		log.Printf("Remote branch %s does not exist, skipping pull step.", branch)
+	stdout, stderr, err = runCommand("git", "pull", "origin", pubBranch, "--rebase")
+	if err != nil && strings.Contains(stderr, fmt.Sprintf("couldn't find remote ref %s", pubBranch)) {
+		log.Printf("Remote branch %s does not exist, skipping pull step.", pubBranch)
 	} else if err != nil {
 		return fmt.Errorf("git pull error: %s: stdout: %s, stderr: %s", err, stdout, stderr)
 	}
 
-	_, _, err = runCommand("git", "push", "origin", sourceBranch+":"+branch)
+	_, _, err = runCommand("git", "push", "origin", mainBranch+":"+pubBranch)
 	if err != nil {
 		return err
 	}
@@ -84,4 +80,17 @@ func PublishToGitHubPages() error {
 	}
 
 	return nil
+}
+
+func runCommand(name string, args ...string) (string, string, error) {
+	cmd := exec.Command(name, args...)
+	var out bytes.Buffer
+	var stderr bytes.Buffer
+	cmd.Stdout = &out
+	cmd.Stderr = &stderr
+	err := cmd.Run()
+	if err != nil {
+		return out.String(), stderr.String(), fmt.Errorf("%s: %s", err, stderr.String())
+	}
+	return out.String(), stderr.String(), nil
 }

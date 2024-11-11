@@ -13,6 +13,7 @@ const defName = "hermes-site"
 
 func NewInitCmd(layoutFS embed.FS) *cobra.Command {
 	var projectName string
+	var githubUser string
 
 	cmd := &cobra.Command{
 		Use:   "init",
@@ -20,6 +21,11 @@ func NewInitCmd(layoutFS embed.FS) *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			if projectName == "" {
 				projectName = defName
+			}
+
+			if githubUser == "" {
+				log.Println("GitHub username is required")
+				return
 			}
 
 			dirs := []string{
@@ -48,7 +54,7 @@ func NewInitCmd(layoutFS embed.FS) *cobra.Command {
 				return
 			}
 
-			err = hermes.NewCfgFile(projectName)
+			err = hermes.NewCfgFile(projectName, githubUser)
 			if err != nil {
 				log.Println("error creating hermes.yml:", err)
 				return
@@ -59,5 +65,6 @@ func NewInitCmd(layoutFS embed.FS) *cobra.Command {
 	}
 
 	cmd.Flags().StringVarP(&projectName, "name", "n", "", "name of the project")
+	cmd.Flags().StringVarP(&githubUser, "user", "u", "", "GitHub username")
 	return cmd
 }
