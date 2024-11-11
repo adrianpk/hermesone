@@ -1,6 +1,8 @@
 package hermes
 
 import (
+	"bytes"
+	"fmt"
 	"os"
 	"os/exec"
 )
@@ -12,37 +14,55 @@ const (
 )
 
 func PublishToGitHubPages() error {
-	if err := os.Chdir(outputDir); err != nil {
+	err := os.Chdir(outputDir)
+	if err != nil {
 		return err
 	}
 
-	if err := exec.Command("git", "init").Run(); err != nil {
+	_, err = os.Stat(".git")
+	if os.IsNotExist(err) {
+		_, err = runCommand("git", "init")
+		if err != nil {
+			return err
+		}
+		_, err = runCommand("git", "remote", "add", "origin", repoURL)
+		if err != nil {
+			return err
+		}
+	}
+
+	_, err = runCommand("git", "add", ".")
+	if err != nil {
 		return err
 	}
 
-	if err := exec.Command("git", "remote", "add", "origin", repoURL).Run(); err != nil {
+	out, err := runCommand("git", "commit", "-m", "Deploy to GitHub Pages")
+	if err != nil {
+		return fmt.Errorf("git commit error: %s: %s", err, out)
+	}
+
+	_, err = runCommand("git", "push", "-f", "origin", "main:"+branch)
+	if err != nil {
 		return err
 	}
 
-	if err := exec.Command("git", "add", ".").Run(); err != nil {
-		return err
-	}
-
-	if err := exec.Command("git", "commit", "-m", "Deploy to GitHub Pages").Run(); err != nil {
-		return err
-	}
-
-	if err := exec.Command("git", "push", "-f", "origin", "master:"+branch).Run(); err != nil {
-		return err
-	}
-
-	if err := os.RemoveAll(".git"); err != nil {
-		return err
-	}
-
-	if err := os.Chdir(".."); err != nil {
+	err = os.Chdir("..")
+	if err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func runCommand(name string, args ...string) (string, error) {
+	cmd := exec.Command(name, args...)
+	var out bytes.Buffer
+	var stderr bytes.Buffer
+	cmd.Stdout = &out
+	cmd.Stderr = &stderr
+	err := cmd.Run()
+	if err != nil {
+		return stderr.String(), fmt.Errorf("%s: %s", err, stderr.String())
+	}
+	return out.String(), nil
 }
