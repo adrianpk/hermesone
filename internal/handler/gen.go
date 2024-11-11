@@ -88,7 +88,18 @@ func GenHTML() error {
 		return nil
 	})
 
-	return err
+	if err != nil {
+		return err
+	}
+
+	err = addNoJekyll()
+	if err != nil {
+		log.Printf("error adding .nojekyll file: %v", err)
+		return err
+	}
+
+	log.Println("HTML generated and .nojekyll file added.")
+	return nil
 }
 
 func determineOutputPath(relativePath string) string {
@@ -149,4 +160,16 @@ func findLayout(path string) string {
 	}
 
 	return ""
+}
+
+func addNoJekyll() error {
+	noJekyllPath := filepath.Join("output", ".nojekyll")
+	if _, err := os.Stat(noJekyllPath); os.IsNotExist(err) {
+		file, err := os.Create(noJekyllPath)
+		if err != nil {
+			return err
+		}
+		defer file.Close()
+	}
+	return nil
 }
