@@ -2,8 +2,14 @@ package handler
 
 import (
 	"embed"
+	"fmt"
 	"os"
 	"time"
+)
+
+const (
+	defaultLayoutPath = "layout/default/default.html"
+	backupLayoutPath  = "layout/default/default-%s.html.bak"
 )
 
 func InitDirs(dirs []string, layoutFS embed.FS) error {
@@ -14,20 +20,20 @@ func InitDirs(dirs []string, layoutFS embed.FS) error {
 		}
 	}
 
-	if _, err := os.Stat("layout/default/default.html"); err == nil {
+	if _, err := os.Stat(defaultLayoutPath); err == nil {
 		timestamp := time.Now().Format("20060102150405")
-		err := os.Rename("layout/default/default.html", "layout/default/default-"+timestamp+".html.bak")
+		err := os.Rename(defaultLayoutPath, fmt.Sprintf(backupLayoutPath, timestamp))
 		if err != nil {
 			return err
 		}
 	}
 
-	content, err := layoutFS.ReadFile("layout/default/default.html")
+	content, err := layoutFS.ReadFile(defaultLayoutPath)
 	if err != nil {
 		return err
 	}
 
-	err = os.WriteFile("layout/default/default.html", content, 0644)
+	err = os.WriteFile(defaultLayoutPath, content, 0644)
 	if err != nil {
 		return err
 	}
