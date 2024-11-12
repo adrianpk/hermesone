@@ -13,16 +13,23 @@ const (
 )
 
 type Config struct {
-	Name string     `yaml:"name"`
-	Repo RepoConfig `yaml:"repo"`
+	Name    string    `yaml:"name"`
+	Git     GitConfig `yaml:"git"`
+	PubRepo RepoConfig `yaml:"pubRepo"`
+	BakRepo RepoConfig `yaml:"bakRepo"`
+}
+
+type GitConfig struct {
+	User string `yaml:"user"`
 }
 
 type RepoConfig struct {
-	User string `yaml:"user"`
-	Name string `yaml:"name"`
-	Main string `yaml:"main"`
-	Pub  string `yaml:"pub"`
+	Name   string `yaml:"name"`
+	Main   string `yaml:"main"`
+	Pub    string `yaml:"pub"`
+	Update string `yaml:"update"`
 }
+
 
 // cfgYAML is the template for the hermes.yml configuration file.
 // name is the name of the project.
@@ -32,11 +39,15 @@ type RepoConfig struct {
 // main is the main branch.
 // pub is the branch to publish to.
 const cfgYAML = `name: {{.Name}}
-repo:
-  user: {{.Repo.User}}
-  name: {{.Repo.Name}}
-  main: {{.Repo.Main}}
-  pub: {{.Repo.Pub}}`
+git:
+  user: {{.Git.User}}
+pubRepo:
+  main: {{.PubRepo.Main}}
+  pub: {{.PubRepo.Pub}}
+bakRepo:
+  name: {{.BakRepo.Name}}
+  main: {{.BakRepo.Main}}
+  update: {{.BakRepo.Update}}`
 
 // NewCfgFile creates a new configuration file with default values for repo name, main branch, and pub branch.
 func NewCfgFile(name string, user string) error {
@@ -53,11 +64,17 @@ func NewCfgFile(name string, user string) error {
 
 	data := Config{
 		Name: name,
-		Repo: RepoConfig{
+		Git: GitConfig{
 			User: user,
-			Name: user + ".github.io",
+		},
+		PubRepo: RepoConfig{
 			Main: "main",
 			Pub:  "gh-pages",
+		},
+		BakRepo: RepoConfig{
+			Name:   "something",
+			Main:   "main",
+			Update: "update",
 		},
 	}
 
@@ -75,6 +92,10 @@ func LoadConfig() (Config, error) {
 	return config, err
 }
 
-func (cfg *Config) RepoURL() string {
-	return fmt.Sprintf("https://github.com/%s/%s", cfg.Repo.User, cfg.Repo.Name)
+func (cfg *Config) PubRepoURL() string {
+	return fmt.Sprintf("https://github.com/%s/%s", cfg.Git.User, cfg.PubRepo.Name)
+}
+
+func (cfg *Config) BakRepoURL() string {
+	return fmt.Sprintf("https://github.com/%s/%s", cfg.Git.User, cfg.BakRepo.Name)
 }

@@ -20,6 +20,7 @@ func main() {
 	rootCmd.AddCommand(cmd.NewUpgradeCmd(layoutFS))
 	rootCmd.AddCommand(cmd.NewNewCmd())
 	rootCmd.AddCommand(cmd.NewPublishCmd()) 
+	rootCmd.AddCommand(cmd.NewBackupCmd()) 
 
 	if len(os.Args) > 1 && os.Args[1] == "help" {
 		rootCmd.Usage()
