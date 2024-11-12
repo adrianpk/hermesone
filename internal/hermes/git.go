@@ -11,15 +11,11 @@ import (
 )
 
 const (
-	outputDir  = "output"
-	repo       = "https://github.com/adrianpk/adrianpk.github.io"
-	pubBranch  = "gh-pages"
-	mainBranch = "main"
+	outputDir = "output"
 )
 
-
 func PublishToGitHubPages(cfg Config) error {
-	repoURL := fmt.Sprintf("https://github.com/%s/%s", cfg.Git.User, cfg.PubRepo.Name)
+	repoURL := cfg.PubRepoURL()
 	pubBranch := cfg.PubRepo.Pub
 	mainBranch := cfg.PubRepo.Main
 
@@ -44,7 +40,7 @@ func PublishToGitHubPages(cfg Config) error {
 			return fmt.Errorf("git status error: %s: stdout: %s, stderr: %s", err, stdout, stderr)
 		}
 		if stdout != "" {
-			log.Println("Uncommitted changes detected, committing them.")
+			log.Println("uncommitted changes detected, committing them.")
 		}
 	}
 
@@ -60,7 +56,7 @@ func PublishToGitHubPages(cfg Config) error {
 
 	stdout, stderr, err = runCommand("git", "pull", "origin", pubBranch, "--rebase")
 	if err != nil && strings.Contains(stderr, fmt.Sprintf("couldn't find remote ref %s", pubBranch)) {
-		log.Printf("Remote branch %s does not exist, skipping pull step.", pubBranch)
+		log.Printf("remote branch %s does not exist, skipping pull step.", pubBranch)
 	} else if err != nil {
 		return fmt.Errorf("git pull error: %s: stdout: %s, stderr: %s", err, stdout, stderr)
 	}
@@ -79,7 +75,7 @@ func PublishToGitHubPages(cfg Config) error {
 }
 
 func BackupToGitHub(cfg Config) error {
-	repoURL := fmt.Sprintf("https://github.com/%s/%s", cfg.Git.User, cfg.BakRepo.Name)
+	repoURL := cfg.BakRepoURL()
 	mainBranch := cfg.BakRepo.Main
 	updateBranch := cfg.BakRepo.Update
 
@@ -121,7 +117,7 @@ func BackupToGitHub(cfg Config) error {
 			return err
 		}
 
-		log.Println("Creating and switching to update branch")
+		log.Println("creating and switching to update branch")
 		_, _, err = runCommand("git", "checkout", "-b", updateBranch)
 		if err != nil {
 			return err
@@ -130,17 +126,17 @@ func BackupToGitHub(cfg Config) error {
 		log.Println("Pushing initial commit to update branch")
 		stdout, stderr, err = runCommand("git", "push", "origin", updateBranch)
 		if err != nil {
-			log.Printf("Error pushing to update branch: %s\nstdout: %s\nstderr: %s", err, stdout, stderr)
+			log.Printf("error pushing to update branch: %s\nstdout: %s\nstderr: %s", err, stdout, stderr)
 			return err
 		}
 	} else {
-		log.Println("Switching to update branch")
+		log.Println("switching to update branch")
 		_, _, err = runCommand("git", "checkout", updateBranch)
 		if err != nil {
 			return err
 		}
 
-		log.Println("Adding changes")
+		log.Println("adding changes")
 		_, _, err = runCommand("git", "add", "--all", ":!output")
 		if err != nil {
 			return err
@@ -152,10 +148,10 @@ func BackupToGitHub(cfg Config) error {
 			return fmt.Errorf("git commit error: %s: stdout: %s, stderr: %s", err, stdout, stderr)
 		}
 
-		log.Println("Pushing changes to update branch")
+		log.Println("pushing changes to update branch")
 		stdout, stderr, err = runCommand("git", "push", "origin", updateBranch)
 		if err != nil {
-			log.Printf("Error pushing to update branch: %s\nstdout: %s\nstderr: %s", err, stdout, stderr)
+			log.Printf("error pushing to update branch: %s\nstdout: %s\nstderr: %s", err, stdout, stderr)
 			return err
 		}
 	}
@@ -165,7 +161,7 @@ func BackupToGitHub(cfg Config) error {
 		return err
 	}
 
-	log.Println("Successfully backed up to GitHub")
+	log.Println("backup complete!")
 	return nil
 }
 

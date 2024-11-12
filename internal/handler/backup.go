@@ -19,6 +19,6 @@ func Backup() error {
 		return err
 	}
 
-	log.Println("backed up to GitHub")
+	log.Println("backup completed!")
 	return nil
 }
