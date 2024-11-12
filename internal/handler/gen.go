@@ -24,7 +24,8 @@ func GenHTML() error {
 		if !info.IsDir() && filepath.Ext(path) == ".md" {
 			relativePath, err := filepath.Rel(contentRoot, path)
 			if err != nil {
-				return err
+				log.Printf("Error getting relative path for %s: %v", path, err)
+				return nil
 			}
 
 			outputPath := determineOutputPath(relativePath)
@@ -32,17 +33,20 @@ func GenHTML() error {
 			if shouldRender(path, outputPath) {
 				fileContent, err := os.ReadFile(path)
 				if err != nil {
-					return err
+					log.Printf("error reading file %s: %v", path, err)
+					return nil
 				}
 
 				content, err := hermes.Parse(fileContent)
 				if err != nil {
-					return err
+					log.Printf("error parsing file %s: %v", path, err)
+					return nil
 				}
 
 				err = hermes.UpdateSection(path, &content.Meta)
 				if err != nil {
-					return err
+					log.Printf("error updating section for file %s: %v", path, err)
+					return nil
 				}
 
 				layoutPath := findLayout(path)
@@ -52,35 +56,38 @@ func GenHTML() error {
 					}).ParseFiles(layoutPath)
 
 					if err != nil {
-						log.Printf("error parsing template files: %v\n", err)
-						return err
+						log.Printf("error parsing template files for %s: %v", path, err)
+						return nil
 					}
 
 					var tmplBuf bytes.Buffer
 					err = tmpl.Execute(&tmplBuf, content)
 					if err != nil {
-						log.Printf("error executing template: %v\n", err)
-						return err
+						log.Printf("error executing template for %s: %v", path, err)
+						return nil
 					}
 
 					err = os.MkdirAll(filepath.Dir(outputPath), os.ModePerm)
 					if err != nil {
-						return err
+						log.Printf("error creating directories for %s: %v", outputPath, err)
+						return nil
 					}
 
 					outputFile, err := os.Create(outputPath)
 					if err != nil {
-						return err
+						log.Printf("error creating output file %s: %v", outputPath, err)
+						return nil
 					}
 					defer outputFile.Close()
 
 					_, err = tmplBuf.WriteTo(outputFile)
 					if err != nil {
-						return err
+						log.Printf("error writing to output file %s: %v", outputPath, err)
+						return nil
 					}
 
 				} else {
-					log.Println("no layout found for:", path)
+					log.Printf("no layout found for %s", path)
 				}
 			}
 		}
