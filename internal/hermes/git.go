@@ -86,7 +86,7 @@ func BackupToGitHub(cfg Config) error {
 
 	_, err = os.Stat(".git")
 	if os.IsNotExist(err) {
-		log.Println("Initializing new git repository")
+		log.Println("initializing new git repository")
 		_, _, err = runCommand("git", "init")
 		if err != nil {
 			return err
@@ -110,10 +110,10 @@ func BackupToGitHub(cfg Config) error {
 			return fmt.Errorf("git commit error: %s: stdout: %s, stderr: %s", err, stdout, stderr)
 		}
 
-		log.Println("Pushing initial commit to main branch")
+		log.Println("pushing initial commit to main branch")
 		stdout, stderr, err = runCommand("git", "push", "origin", mainBranch)
 		if err != nil {
-			log.Printf("Error pushing to main branch: %s\nstdout: %s\nstderr: %s", err, stdout, stderr)
+			log.Printf("error pushing to main branch: %s\nstdout: %s\nstderr: %s", err, stdout, stderr)
 			return err
 		}
 
@@ -123,7 +123,7 @@ func BackupToGitHub(cfg Config) error {
 			return err
 		}
 
-		log.Println("Pushing initial commit to update branch")
+		log.Println("pushing initial commit to update branch")
 		stdout, stderr, err = runCommand("git", "push", "origin", updateBranch)
 		if err != nil {
 			log.Printf("error pushing to update branch: %s\nstdout: %s\nstderr: %s", err, stdout, stderr)
@@ -142,7 +142,7 @@ func BackupToGitHub(cfg Config) error {
 			return err
 		}
 
-		commitMessage := fmt.Sprintf("Update at %s", time.Now().Format(time.RFC3339))
+		commitMessage := fmt.Sprintf("update at %s", time.Now().Format(time.RFC3339))
 		stdout, stderr, err := runCommand("git", "commit", "-m", commitMessage)
 		if err != nil && !strings.Contains(stderr, "nothing to commit") {
 			return fmt.Errorf("git commit error: %s: stdout: %s, stderr: %s", err, stdout, stderr)

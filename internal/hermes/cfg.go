@@ -9,12 +9,13 @@ import (
 )
 
 const (
-	cfgFile = "hermes.yml"
+	cfgFile   = "hermes.yml"
+	githubURL = "https://github.com/%s/%s"
 )
 
 type Config struct {
-	Name    string    `yaml:"name"`
-	Git     GitConfig `yaml:"git"`
+	Name    string     `yaml:"name"`
+	Git     GitConfig  `yaml:"git"`
 	PubRepo RepoConfig `yaml:"pubRepo"`
 	BakRepo RepoConfig `yaml:"bakRepo"`
 }
@@ -29,7 +30,6 @@ type RepoConfig struct {
 	Pub    string `yaml:"pub"`
 	Update string `yaml:"update"`
 }
-
 
 // cfgYAML is the template for the hermes.yml configuration file.
 // name is the name of the project.
@@ -93,9 +93,9 @@ func LoadConfig() (Config, error) {
 }
 
 func (cfg *Config) PubRepoURL() string {
-	return fmt.Sprintf("https://github.com/%s/%s", cfg.Git.User, cfg.PubRepo.Name)
+	return fmt.Sprintf(githubURL, cfg.Git.User, cfg.PubRepo.Name)
 }
 
 func (cfg *Config) BakRepoURL() string {
-	return fmt.Sprintf("https://github.com/%s/%s", cfg.Git.User, cfg.BakRepo.Name)
+	return fmt.Sprintf(githubURL, cfg.Git.User, cfg.BakRepo.Name)
 }
