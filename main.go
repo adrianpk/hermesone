@@ -8,7 +8,7 @@ import (
 	"github.com/adrianpk/gohermes/internal/cmd"
 )
 
-const ver = "0.0.1"
+const ver = "0.0.1b"
 
 //go:embed layout
 var layoutFS embed.FS

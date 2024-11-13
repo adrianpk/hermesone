@@ -3,6 +3,7 @@ package handler
 import (
 	"bytes"
 	"html/template"
+	"io"
 	"log"
 	"os"
 	"path/filepath"
@@ -13,6 +14,7 @@ import (
 
 const (
 	contentRoot = "content"
+	outputRoot  = "output"
 )
 
 func GenHTML() error {
@@ -24,7 +26,7 @@ func GenHTML() error {
 		if !info.IsDir() && filepath.Ext(path) == ".md" {
 			relativePath, err := filepath.Rel(contentRoot, path)
 			if err != nil {
-				log.Printf("Error getting relative path for %s: %v", path, err)
+				log.Printf("error getting relative path for %s: %v", path, err)
 				return nil
 			}
 
@@ -86,6 +88,13 @@ func GenHTML() error {
 						return nil
 					}
 
+					log.Printf("### copied %s to %s", path, outputPath)
+					err = copyImages(path, outputPath)
+					if err != nil {
+						log.Printf("error copying images for %s: %v", path, err)
+						return nil
+					}
+
 				} else {
 					log.Printf("no layout found for %s", path)
 				}
@@ -111,8 +120,9 @@ func GenHTML() error {
 
 func determineOutputPath(relativePath string) string {
 	parts := strings.Split(relativePath, string(os.PathSeparator))
+
 	if len(parts) < 2 {
-		return filepath.Join("output", relativePath[:len(relativePath)-3]+".html")
+		return filepath.Join(outputRoot, relativePath[:len(relativePath)-3]+".html")
 	}
 
 	section := parts[0]
@@ -121,14 +131,22 @@ func determineOutputPath(relativePath string) string {
 	switch section {
 	case "root":
 		if subdir == "blog" || subdir == "series" {
-			return filepath.Join("output", subdir, relativePath[len(section)+len(subdir)+2:len(relativePath)-3]+".html")
+			return filepath.Join(outputRoot, subdir, strings.Join(parts[2:], string(os.PathSeparator))[:len(relativePath)-len(section)-len(subdir)-2]+".html")
 		}
-		return filepath.Join("output", relativePath[len(section)+len(subdir)+2:len(relativePath)-3]+".html")
+		if subdir == "articles" || subdir == "pages" {
+			return filepath.Join(outputRoot, strings.Join(parts[2:], string(os.PathSeparator))[:len(relativePath)-len(section)-len(subdir)-2]+".html")
+		}
+		return filepath.Join(outputRoot, strings.Join(parts[1:], string(os.PathSeparator))[:len(relativePath)-len(section)-1]+".html")
+	case "pages", "articles":
+		return filepath.Join(outputRoot, strings.Join(parts[1:], string(os.PathSeparator))[:len(relativePath)-len(section)-1]+".html")
 	default:
 		if subdir == "blog" || subdir == "series" {
-			return filepath.Join("output", section, subdir, relativePath[len(section)+len(subdir)+2:len(relativePath)-3]+".html")
+			return filepath.Join(outputRoot, section, subdir, strings.Join(parts[2:], string(os.PathSeparator))[:len(relativePath)-len(section)-len(subdir)-2]+".html")
 		}
-		return filepath.Join("output", section, relativePath[len(section)+len(subdir)+2:len(relativePath)-3]+".html")
+		if subdir == "articles" || subdir == "pages" {
+			return filepath.Join(outputRoot, section, strings.Join(parts[2:], string(os.PathSeparator))[:len(relativePath)-len(section)-len(subdir)-2]+".html")
+		}
+		return filepath.Join(outputRoot, section, strings.Join(parts[1:], string(os.PathSeparator))[:len(relativePath)-len(section)-1]+".html")
 	}
 }
 
@@ -169,8 +187,88 @@ func findLayout(path string) string {
 	return ""
 }
 
+func copyImages(mdPath, htmlPath string) error {
+	imageDir := strings.TrimSuffix(mdPath, filepath.Ext(mdPath))
+	relativeImageDir := strings.TrimPrefix(imageDir, contentRoot+"/")
+
+	if strings.HasPrefix(relativeImageDir, "root/") {
+		relativeImageDir = strings.TrimPrefix(relativeImageDir, "root/")
+
+		parts := strings.Split(relativeImageDir, string(os.PathSeparator))
+
+		if len(parts) == 1 {
+			// .md file is directly under content/root (e.g., content/root/index.md)
+			relativeImageDir = filepath.Join("img", parts[0])
+		} else if len(parts) > 1 {
+			switch parts[0] {
+			case "blog", "series":
+				relativeImageDir = filepath.Join("img", parts[0], parts[1])
+			case "articles", "pages":
+				// For images in content/root/articles or content/root/pages, copy to output/img/{content-name-without-ext}
+				relativeImageDir = filepath.Join("img", parts[1])
+			default:
+				relativeImageDir = filepath.Join("img", strings.Join(parts, string(os.PathSeparator)))
+			}
+		}
+	} else {
+		// Sections
+		parts := strings.Split(relativeImageDir, string(os.PathSeparator))
+
+		if len(parts) > 2 && (parts[1] == "articles" || parts[1] == "pages") {
+			relativeImageDir = filepath.Join("img", parts[0], parts[2])
+		} else if len(parts) > 2 && (parts[1] == "blog" || parts[1] == "series") {
+			relativeImageDir = filepath.Join("img", parts[0], parts[1], parts[2])
+		} else {
+			relativeImageDir = filepath.Join("img", strings.Join(parts, string(os.PathSeparator)))
+		}
+	}
+
+	outputImageDir := filepath.Join(outputRoot, relativeImageDir)
+
+	err := filepath.Walk(imageDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if !info.IsDir() {
+			relativePath, err := filepath.Rel(imageDir, path)
+			if err != nil {
+				return err
+			}
+
+			destPath := filepath.Join(outputImageDir, relativePath)
+
+			err = os.MkdirAll(filepath.Dir(destPath), os.ModePerm)
+			if err != nil {
+				return err
+			}
+
+			srcFile, err := os.Open(path)
+			if err != nil {
+				return err
+			}
+			defer srcFile.Close()
+
+			destFile, err := os.Create(destPath)
+			if err != nil {
+				return err
+			}
+			defer destFile.Close()
+
+			_, err = io.Copy(destFile, srcFile)
+			if err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
+
+	return err
+}
+
 func addNoJekyll() error {
-	noJekyllPath := filepath.Join("output", ".nojekyll")
+	noJekyllPath := filepath.Join(outputRoot, ".nojekyll")
 	if _, err := os.Stat(noJekyllPath); os.IsNotExist(err) {
 		file, err := os.Create(noJekyllPath)
 		if err != nil {
