@@ -17,6 +17,7 @@ const (
 	outputRoot  = "output"
 )
 
+// GenHTML generates the HTML files from the markdown files.
 func GenHTML() error {
 	err := filepath.Walk(contentRoot, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -39,7 +40,7 @@ func GenHTML() error {
 					return nil
 				}
 
-				content, err := hermes.Parse(fileContent)
+				content, err := hermes.Parse(fileContent, path)
 				if err != nil {
 					log.Printf("error parsing file %s: %v", path, err)
 					return nil
@@ -88,7 +89,6 @@ func GenHTML() error {
 						return nil
 					}
 
-					log.Printf("### copied %s to %s", path, outputPath)
 					err = copyImages(path, outputPath)
 					if err != nil {
 						log.Printf("error copying images for %s: %v", path, err)
@@ -122,7 +122,7 @@ func determineOutputPath(relativePath string) string {
 	parts := strings.Split(relativePath, string(os.PathSeparator))
 
 	if len(parts) < 2 {
-		return filepath.Join(outputRoot, relativePath[:len(relativePath)-3]+".html")
+		return filepath.Join(outputRoot, strings.TrimSuffix(relativePath, filepath.Ext(relativePath))+".html")
 	}
 
 	section := parts[0]
@@ -131,25 +131,27 @@ func determineOutputPath(relativePath string) string {
 	switch section {
 	case "root":
 		if subdir == "blog" || subdir == "series" {
-			return filepath.Join(outputRoot, subdir, strings.Join(parts[2:], string(os.PathSeparator))[:len(relativePath)-len(section)-len(subdir)-2]+".html")
+			return filepath.Join(outputRoot, subdir, strings.TrimSuffix(strings.Join(parts[2:], string(os.PathSeparator)), filepath.Ext(relativePath))+".html")
 		}
 		if subdir == "articles" || subdir == "pages" {
-			return filepath.Join(outputRoot, strings.Join(parts[2:], string(os.PathSeparator))[:len(relativePath)-len(section)-len(subdir)-2]+".html")
+			return filepath.Join(outputRoot, strings.TrimSuffix(strings.Join(parts[2:], string(os.PathSeparator)), filepath.Ext(relativePath))+".html")
 		}
-		return filepath.Join(outputRoot, strings.Join(parts[1:], string(os.PathSeparator))[:len(relativePath)-len(section)-1]+".html")
+		return filepath.Join(outputRoot, strings.TrimSuffix(strings.Join(parts[1:], string(os.PathSeparator)), filepath.Ext(relativePath))+".html")
 	case "pages", "articles":
-		return filepath.Join(outputRoot, strings.Join(parts[1:], string(os.PathSeparator))[:len(relativePath)-len(section)-1]+".html")
+		return filepath.Join(outputRoot, strings.TrimSuffix(strings.Join(parts[1:], string(os.PathSeparator)), filepath.Ext(relativePath))+".html")
 	default:
 		if subdir == "blog" || subdir == "series" {
-			return filepath.Join(outputRoot, section, subdir, strings.Join(parts[2:], string(os.PathSeparator))[:len(relativePath)-len(section)-len(subdir)-2]+".html")
+			return filepath.Join(outputRoot, section, subdir, strings.TrimSuffix(strings.Join(parts[2:], string(os.PathSeparator)), filepath.Ext(relativePath))+".html")
 		}
 		if subdir == "articles" || subdir == "pages" {
-			return filepath.Join(outputRoot, section, strings.Join(parts[2:], string(os.PathSeparator))[:len(relativePath)-len(section)-len(subdir)-2]+".html")
+			return filepath.Join(outputRoot, section, strings.TrimSuffix(strings.Join(parts[2:], string(os.PathSeparator)), filepath.Ext(relativePath))+".html")
 		}
-		return filepath.Join(outputRoot, section, strings.Join(parts[1:], string(os.PathSeparator))[:len(relativePath)-len(section)-1]+".html")
+		return filepath.Join(outputRoot, section, strings.TrimSuffix(strings.Join(parts[1:], string(os.PathSeparator)), filepath.Ext(relativePath))+".html")
 	}
 }
 
+// shouldRender checks if the markdown file is newer than the html file
+// to determine if the html should be re-rendered.
 func shouldRender(mdPath, htmlPath string) bool {
 	htmlInfo, err := os.Stat(htmlPath)
 	if os.IsNotExist(err) {
@@ -166,6 +168,7 @@ func shouldRender(mdPath, htmlPath string) bool {
 	return render
 }
 
+// findLayout tries to find the layout file for the given markdown file.
 func findLayout(path string) string {
 	path = strings.TrimPrefix(path, "content/root/")
 
@@ -187,6 +190,7 @@ func findLayout(path string) string {
 	return ""
 }
 
+// copyImages copies the images from the markdown directory to the output directory.
 func copyImages(mdPath, htmlPath string) error {
 	imageDir := strings.TrimSuffix(mdPath, filepath.Ext(mdPath))
 	relativeImageDir := strings.TrimPrefix(imageDir, contentRoot+"/")
@@ -197,21 +201,18 @@ func copyImages(mdPath, htmlPath string) error {
 		parts := strings.Split(relativeImageDir, string(os.PathSeparator))
 
 		if len(parts) == 1 {
-			// .md file is directly under content/root (e.g., content/root/index.md)
 			relativeImageDir = filepath.Join("img", parts[0])
 		} else if len(parts) > 1 {
 			switch parts[0] {
 			case "blog", "series":
 				relativeImageDir = filepath.Join("img", parts[0], parts[1])
 			case "articles", "pages":
-				// For images in content/root/articles or content/root/pages, copy to output/img/{content-name-without-ext}
 				relativeImageDir = filepath.Join("img", parts[1])
 			default:
 				relativeImageDir = filepath.Join("img", strings.Join(parts, string(os.PathSeparator)))
 			}
 		}
 	} else {
-		// Sections
 		parts := strings.Split(relativeImageDir, string(os.PathSeparator))
 
 		if len(parts) > 2 && (parts[1] == "articles" || parts[1] == "pages") {
@@ -267,6 +268,7 @@ func copyImages(mdPath, htmlPath string) error {
 	return err
 }
 
+// addNoJekyll adds a .nojekyll file to the output directory.
 func addNoJekyll() error {
 	noJekyllPath := filepath.Join(outputRoot, ".nojekyll")
 	if _, err := os.Stat(noJekyllPath); os.IsNotExist(err) {
