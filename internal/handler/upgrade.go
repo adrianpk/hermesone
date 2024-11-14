@@ -11,6 +11,7 @@ import (
 	"github.com/adrianpk/gohermes/internal/hermes"
 )
 
+// Upgrade the layout templates.
 func Upgrade(dirs []string, layoutFS embed.FS) error {
 	err := hermes.CheckHermes()
 	if err != nil {
@@ -26,11 +27,11 @@ func Upgrade(dirs []string, layoutFS embed.FS) error {
 	}
 
 	files := []string{
-		"layout/default/default.html",
-		"layout/default/article/default.html",
-		"layout/default/blog/default.html",
-		"layout/default/page/default.html",
-		"layout/default/series/default.html",
+		defaultLayoutFile,
+		filepath.Join(defaultLayoutDir, articles, defaultLayout),
+		filepath.Join(defaultLayoutDir, blog, defaultLayout),
+		filepath.Join(defaultLayoutDir, pages, defaultLayout),
+		filepath.Join(defaultLayoutDir, series, defaultLayout),
 	}
 
 	for _, file := range files {

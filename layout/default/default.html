@@ -42,10 +42,10 @@
         Published: {{.Meta.PublishDate}} |
         Last Modified: {{.Meta.LastModified}}
     </p>
-    <div class="mb-8 text-center">
-        <strong>Categories:</strong> {{range .Meta.Categories}}{{.}},{{end}}<br>
-        <strong>Tags:</strong> {{range .Meta.Tags}}{{.}},{{end}}
-    </div>
+    <!-- <div class="mb-8 text-center"> -->
+    <!--     <strong>Categories:</strong> {{range .Meta.Categories}}{{.}},{{end}}<br> -->
+    <!--     <strong>Tags:</strong> {{range .Meta.Tags}}{{.}},{{end}} -->
+    <!-- </div> -->
     <article class="prose lg:prose-xl mx-auto">
         {{.HTML | safeHTML}}
     </article>
@@ -63,6 +63,7 @@
         Change Frequency: {{.Meta.Sitemap.ChangeFreq}}
     </div>
     {{ end }}
+      DEFAULT
 </footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/prism.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/components/prism-bash.min.js"></script>
