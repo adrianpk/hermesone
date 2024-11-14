@@ -4,12 +4,23 @@ import (
 	"embed"
 	"fmt"
 	"os"
+	"path/filepath"
 	"time"
 )
 
 const (
-	defaultLayoutPath = "layout/default/default.html"
-	backupLayoutPath  = "layout/default/default-%s.html.bak"
+	imgDir        = "img"
+	defaultLayout = "default.html"
+)
+
+var (
+	defaultLayoutDir  = filepath.Join("layout", "default")
+	defaultLayoutFile = filepath.Join(defaultLayoutDir, defaultLayout)
+	backupLayoutPath  = filepath.Join(defaultLayoutDir, "default-%s.html.bak")
+)
+
+var (
+	osFileSep = string(os.PathSeparator)
 )
 
 func InitDirs(dirs []string, layoutFS embed.FS) error {
@@ -20,20 +31,20 @@ func InitDirs(dirs []string, layoutFS embed.FS) error {
 		}
 	}
 
-	if _, err := os.Stat(defaultLayoutPath); err == nil {
+	if _, err := os.Stat(defaultLayoutFile); err == nil {
 		timestamp := time.Now().Format("20060102150405")
-		err := os.Rename(defaultLayoutPath, fmt.Sprintf(backupLayoutPath, timestamp))
+		err := os.Rename(defaultLayoutFile, fmt.Sprintf(backupLayoutPath, timestamp))
 		if err != nil {
 			return err
 		}
 	}
 
-	content, err := layoutFS.ReadFile(defaultLayoutPath)
+	content, err := layoutFS.ReadFile(defaultLayoutFile)
 	if err != nil {
 		return err
 	}
 
-	err = os.WriteFile(defaultLayoutPath, content, 0644)
+	err = os.WriteFile(defaultLayoutFile, content, 0644)
 	if err != nil {
 		return err
 	}
