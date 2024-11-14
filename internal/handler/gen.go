@@ -200,13 +200,24 @@ func findLayout(path string) string {
 	base := filepath.Base(path)
 	base = strings.TrimSuffix(base, filepath.Ext(base))
 	dir := filepath.Dir(path)
+	section, _ := sectionTypeSegments(path)
+
+	secTypeLayoutDir := filepath.Join(layoutDir, dir)
+	secLayoutDir := filepath.Join(layoutDir, section)
 
 	layoutPaths := []string{
-		filepath.Join(defaultLayoutDir, dir, base+".html"),
-		filepath.Join(defaultLayoutDir, dir, "default.html"),
-		filepath.Join(defaultLayoutDir, filepath.Base(dir), "default.html"),
-		filepath.Join(defaultLayoutDir, "default.html"),
+		filepath.Join(secTypeLayoutDir, base+".html"),
+		filepath.Join(secTypeLayoutDir, defaultLayout),
+		filepath.Join(secLayoutDir, defaultLayout),
+		filepath.Join(defaultLayoutDir, filepath.Base(dir), defaultLayout),
+		filepath.Join(defaultLayoutDir, base+".html"),
+		filepath.Join(defaultLayoutDir, defaultLayout),
 	}
+
+	// NOTE: Remove before merging
+	//for _, s := range layoutPaths {
+	//	log.Println(s)
+	//}
 
 	for _, layoutPath := range layoutPaths {
 		if _, err := os.Stat(layoutPath); err == nil {
@@ -215,6 +226,21 @@ func findLayout(path string) string {
 	}
 
 	return ""
+}
+
+func sectionTypeSegments(path string) (string, string) {
+	dir := filepath.Dir(path)
+	segments := strings.Split(dir, osFileSep)
+
+	var sectionSegment, typeSegment string
+	if len(segments) > 0 {
+		sectionSegment = segments[0]
+	}
+	if len(segments) > 1 {
+		typeSegment = segments[1]
+	}
+
+	return sectionSegment, typeSegment
 }
 
 // copyImages copies the images from the markdown directory to the output directory.

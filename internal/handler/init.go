@@ -14,7 +14,8 @@ const (
 )
 
 var (
-	defaultLayoutDir  = filepath.Join("layout", "default")
+	layoutDir         = "layout"
+	defaultLayoutDir  = filepath.Join(layoutDir, "default")
 	defaultLayoutFile = filepath.Join(defaultLayoutDir, defaultLayout)
 	backupLayoutPath  = filepath.Join(defaultLayoutDir, "default-%s.html.bak")
 )
