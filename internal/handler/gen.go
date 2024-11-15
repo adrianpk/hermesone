@@ -31,7 +31,14 @@ const (
 
 // GenHTML generates the HTML files from the markdown files.
 func GenHTML() error {
-	err := filepath.Walk(contentRoot, func(path string, info os.FileInfo, err error) error {
+	cache, err := hermes.BuildCache(contentRoot)
+	if err != nil {
+		log.Printf("error building cache: %v", err)
+		return err
+	}
+	cache.Debug()
+
+	err = filepath.Walk(contentRoot, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
