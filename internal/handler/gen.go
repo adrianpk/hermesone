@@ -14,8 +14,8 @@ import (
 )
 
 const (
-	contentRoot = "content"
-	outputRoot  = "output"
+	contentDir = "content"
+	outputDir  = "output"
 )
 
 const (
@@ -31,20 +31,18 @@ const (
 
 // GenHTML generates the HTML files from the markdown files.
 func GenHTML() error {
-	cache, err := hermes.BuildCache(contentRoot)
-	if err != nil {
-		log.Printf("error building cache: %v", err)
+	// NOTE: PreProcessor will be used to improve the generation  but for now is only here to debug the content.
+	if err := startPreProcessor(contentDir); err != nil {
 		return err
 	}
-	cache.Debug()
 
-	err = filepath.Walk(contentRoot, func(path string, info os.FileInfo, err error) error {
+	err := filepath.Walk(contentDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
 
 		if !info.IsDir() && filepath.Ext(path) == ".md" {
-			relativePath, err := filepath.Rel(contentRoot, path)
+			relativePath, err := filepath.Rel(contentDir, path)
 			if err != nil {
 				log.Printf("error getting relative path for %s: %v", path, err)
 				return nil
@@ -65,11 +63,11 @@ func GenHTML() error {
 					return nil
 				}
 
-				err = hermes.UpdateSection(path, &content.Meta)
-				if err != nil {
-					log.Printf("error updating section for file %s: %v", path, err)
-					return nil
-				}
+				// err = hermes.CorrectSection(path, &content.Meta)
+				// if err != nil {
+				// 	log.Printf("error updating section for file %s: %v", path, err)
+				// 	return nil
+				// }
 
 				layoutPath := findLayout(path)
 				if layoutPath != "" {
@@ -179,7 +177,7 @@ func needsCustomDir(dir string) bool {
 
 func outputPath(parts ...string) string {
 	trimmedPath := strings.TrimSuffix(strings.Join(parts, osFileSep), filepath.Ext(parts[len(parts)-1])) + ".html"
-	return filepath.Join(outputRoot, trimmedPath)
+	return filepath.Join(outputDir, trimmedPath)
 }
 
 // shouldRender checks if the markdown file is newer than the html file
@@ -254,7 +252,7 @@ func sectionTypeSegments(path string) (string, string) {
 func copyImages(mdPath, htmlPath string) error {
 	rootPrefix := "root/"
 	imageDir := strings.TrimSuffix(mdPath, filepath.Ext(mdPath))
-	relativeImageDir := strings.TrimPrefix(imageDir, contentRoot+"/")
+	relativeImageDir := strings.TrimPrefix(imageDir, contentDir+"/")
 
 	if strings.HasPrefix(relativeImageDir, rootPrefix) {
 		relativeImageDir = strings.TrimPrefix(relativeImageDir, rootPrefix)
@@ -285,7 +283,7 @@ func copyImages(mdPath, htmlPath string) error {
 		}
 	}
 
-	outputImageDir := filepath.Join(outputRoot, relativeImageDir)
+	outputImageDir := filepath.Join(outputDir, relativeImageDir)
 
 	err := filepath.Walk(imageDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -331,7 +329,7 @@ func copyImages(mdPath, htmlPath string) error {
 
 // addNoJekyll adds a .nojekyll file to the output directory.
 func addNoJekyll() error {
-	noJekyllPath := filepath.Join(outputRoot, noJekyllFile)
+	noJekyllPath := filepath.Join(outputDir, noJekyllFile)
 	if _, err := os.Stat(noJekyllPath); os.IsNotExist(err) {
 		file, err := os.Create(noJekyllPath)
 		if err != nil {
@@ -339,5 +337,24 @@ func addNoJekyll() error {
 		}
 		defer file.Close()
 	}
+	return nil
+}
+
+// startPreProcessor initializes the pre-processor.
+func startPreProcessor(root string) error {
+	pp := hermes.NewPreProcessor(root)
+	err := pp.Build()
+	if err != nil {
+		log.Printf("error building data pre-processor: %v", err)
+		return err
+	}
+
+	err = pp.Sync()
+	if err != nil {
+		log.Printf("error syncing file metadata: %v", err)
+		return err
+	}
+
+	pp.Debug()
 	return nil
 }

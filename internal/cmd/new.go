@@ -47,7 +47,7 @@ import (
 // title: "How to Create New Content in Hermes"
 // description: ""
 // date: "2023-10-01"
-// publish-date: "2023-10-01"
+// published-at: "2023-10-01"
 // last-modified: "2023-10-01"
 // type: "article"
 // section: "guides"
@@ -101,17 +101,18 @@ func NewNewCmd() *cobra.Command {
 			now := time.Now().Format("2006-01-02")
 
 			meta := hermes.Meta{
-				Title:        name,
-				Description:  "",
-				Date:         now,
-				PublishDate:  now,
-				LastModified: now,
-				Type:         contentType,
-				Section:      section,
-				Slug:         slug,
-				Authors:      authors,
-				Tags:         tags,
-				Draft:        true,
+				Title:       name,
+				Description: "",
+				Date:        now,
+				PublishedAt: now,
+				CreatedAt:   now,
+				UpdatedAt:   now,
+				Type:        contentType,
+				Section:     section,
+				Slug:        slug,
+				Authors:     authors,
+				Tags:        tags,
+				Draft:       true,
 			}
 
 			metaData, err := yaml.Marshal(meta)
