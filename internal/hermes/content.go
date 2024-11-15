@@ -7,17 +7,18 @@ type Content struct {
 }
 
 type Meta struct {
-	Title           string   `yaml:"title"`         // Title of the content
-	Description     string   `yaml:"description"`   // Description of the content
-	Summary         string   `yaml:"summary"`       // Summary of the content
-	Date            string   `yaml:"date"`          // Date of the content
-	PublishDate     string   `yaml:"publish-date"`  // Publish date of the content
-	LastModified    string   `yaml:"last-modified"` // Last modified date of the content
-	Type            string   `yaml:"type"`          // Type of the content
-	Section         string   `yaml:"section"`       // Section of the content
-	Slug            string   `yaml:"slug"`          // Slug of the content
-	Image           string   `yaml:"image"`         // Image of the content
-	SocialImage     string   `yaml:"social-image"`  // Social image of the content
+	Title           string   `yaml:"title"`        // Title of the content
+	Description     string   `yaml:"description"`  // Description of the content
+	Summary         string   `yaml:"summary"`      // Summary of the content
+	Date            string   `yaml:"date"`         // Date of the content
+	PublishedAt     string   `yaml:"published-at"` // Publish date of the content
+	CreatedAt       string   `yaml:"created-at"`   // Created date of the content
+	UpdatedAt       string   `yaml:"updated-at"`   // Updated date of the content
+	Type            string   `yaml:"type"`         // Type of the content
+	Section         string   `yaml:"section"`      // Section of the content
+	Slug            string   `yaml:"slug"`         // Slug of the content
+	Image           string   `yaml:"image"`        // Image of the content
+	SocialImage     string   `yaml:"social-image"` // Social image of the content
 	Layout          string   `yaml:"layout"`
 	CanonicalURL    string   `yaml:"canonical-url"`
 	Locale          string   `yaml:"locale"`  // Locale of the content
