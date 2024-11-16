@@ -18,6 +18,7 @@ type FileData struct {
 	Content   string `json:"content"`
 	CreatedAt string `json:"created_at"`
 	UpdatedAt string `json:"updated_at"`
+	Published bool
 }
 
 // PreProcessor adjusts file metadata and content.
@@ -42,7 +43,8 @@ func (pp *PreProcessor) Build() error {
 			return err
 		}
 
-		fmt.Printf("processing file: %s\n", path)
+		//fmt.Printf("processing file: %s\n", path)
+
 		if !info.IsDir() && filepath.Ext(path) == ".md" {
 			fileContent, err := os.ReadFile(path)
 			if err != nil {
@@ -70,13 +72,16 @@ func (pp *PreProcessor) Build() error {
 				UpdatedAt: info.ModTime().Format(time.RFC3339),
 			}
 
+			fileData.UpdatePublishedStatus()
+
 			relativePath, err := filepath.Rel(pp.Root, path)
 			if err != nil {
 				fmt.Printf("error getting relative path: %s\n", err)
 				return err
 			}
 
-			fmt.Printf("adding file to cache: %s\n", relativePath)
+			//fmt.Printf("adding file to preprocessor cache: %s\n", relativePath)
+
 			pp.Data[relativePath] = fileData
 		}
 
@@ -84,6 +89,12 @@ func (pp *PreProcessor) Build() error {
 	})
 
 	return err
+}
+
+// FindFileData finds the file data by the relative path.
+func (pp *PreProcessor) FindFileData(relativePath string) (FileData, bool) {
+	fileData, exists := pp.Data[relativePath]
+	return fileData, exists
 }
 
 // Debug prints the cache content in a pretty, hierarchical way
@@ -178,4 +189,19 @@ func CorrectSection(mdPath string, meta *Meta) bool {
 	}
 
 	return false
+}
+
+func (fd *FileData) UpdatePublishedStatus() {
+	if fd.Meta.PublishedAt == "" {
+		fd.Published = false
+		return
+	}
+
+	publishedAt, err := time.Parse(time.RFC3339, fd.Meta.PublishedAt)
+	if err != nil {
+		fd.Published = false
+		return
+	}
+
+	fd.Published = time.Now().After(publishedAt)
 }

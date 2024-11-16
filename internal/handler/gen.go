@@ -31,12 +31,12 @@ const (
 
 // GenHTML generates the HTML files from the markdown files.
 func GenHTML() error {
-	// NOTE: PreProcessor will be used to improve the generation  but for now is only here to debug the content.
-	if err := startPreProcessor(contentDir); err != nil {
+	pp, err := startPreProcessor(contentDir)
+	if err != nil {
 		return err
 	}
 
-	err := filepath.Walk(contentDir, func(path string, info os.FileInfo, err error) error {
+	err = filepath.Walk(contentDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
@@ -45,6 +45,17 @@ func GenHTML() error {
 			relativePath, err := filepath.Rel(contentDir, path)
 			if err != nil {
 				log.Printf("error getting relative path for %s: %v", path, err)
+				return nil
+			}
+
+			fileData, exists := pp.FindFileData(relativePath)
+			if !exists {
+				log.Printf("file data not found for %s", relativePath)
+				return nil
+			}
+
+			if !fileData.Published {
+				//log.Printf("skipping unpublished file: %s", relativePath)
 				return nil
 			}
 
@@ -62,12 +73,6 @@ func GenHTML() error {
 					log.Printf("error parsing file %s: %v", path, err)
 					return nil
 				}
-
-				// err = hermes.CorrectSection(path, &content.Meta)
-				// if err != nil {
-				// 	log.Printf("error updating section for file %s: %v", path, err)
-				// 	return nil
-				// }
 
 				layoutPath := findLayout(path)
 				if layoutPath != "" {
@@ -340,21 +345,21 @@ func addNoJekyll() error {
 	return nil
 }
 
-// startPreProcessor initializes the pre-processor.
-func startPreProcessor(root string) error {
+func startPreProcessor(root string) (*hermes.PreProcessor, error) {
 	pp := hermes.NewPreProcessor(root)
 	err := pp.Build()
 	if err != nil {
-		log.Printf("error building data pre-processor: %v", err)
-		return err
+		log.Printf("error building pp: %v", err)
+		return nil, err
 	}
 
 	err = pp.Sync()
 	if err != nil {
-		log.Printf("error syncing file metadata: %v", err)
-		return err
+		log.Printf("error syncing pp: %v", err)
+		return nil, err
 	}
 
-	pp.Debug()
-	return nil
+	//pp.Debug()
+
+	return pp, nil
 }

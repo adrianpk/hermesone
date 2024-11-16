@@ -35,7 +35,7 @@ func Upgrade(dirs []string, layoutFS embed.FS) error {
 	}
 
 	for _, file := range files {
-		log.Printf("processing file: %s", file)
+		//log.Printf("processing file: %s", file)
 
 		if _, err := os.Stat(file); err == nil {
 			timestamp := time.Now().Format("060102150405")
