@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"time"
 
@@ -23,8 +24,13 @@ type FileData struct {
 
 // PreProcessor adjusts file metadata and content.
 type PreProcessor struct {
-	Data map[string]FileData
-	Root string
+	Root          string
+	Data          map[string]FileData
+	All           []FileData
+	BySection     map[string][]FileData
+	BySectionType map[string]map[string][]FileData
+	ByTags        map[string][]FileData
+	ByPath        map[string]FileData
 }
 
 // NewPreProcessor creates a new PreProcessor instance
@@ -42,8 +48,6 @@ func (pp *PreProcessor) Build() error {
 		if err != nil {
 			return err
 		}
-
-		//fmt.Printf("processing file: %s\n", path)
 
 		if !info.IsDir() && filepath.Ext(path) == ".md" {
 			fileContent, err := os.ReadFile(path)
@@ -80,21 +84,41 @@ func (pp *PreProcessor) Build() error {
 				return err
 			}
 
-			//fmt.Printf("adding file to preprocessor cache: %s\n", relativePath)
-
 			pp.Data[relativePath] = fileData
 		}
 
 		return nil
 	})
 
-	return err
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // FindFileData finds the file data by the relative path.
 func (pp *PreProcessor) FindFileData(relativePath string) (FileData, bool) {
 	fileData, exists := pp.Data[relativePath]
 	return fileData, exists
+}
+
+// GetPublishedContent returns a list of published content ordered by PublishedAt in descending order
+func (pp *PreProcessor) GetPublishedContent() []FileData {
+	var publishedContent []FileData
+	for _, fileData := range pp.Data {
+		if fileData.Published {
+			publishedContent = append(publishedContent, fileData)
+		}
+	}
+
+	sort.Slice(publishedContent, func(i, j int) bool {
+		publishedAtI, _ := time.Parse(time.RFC3339, publishedContent[i].Meta.PublishedAt)
+		publishedAtJ, _ := time.Parse(time.RFC3339, publishedContent[j].Meta.PublishedAt)
+		return publishedAtI.After(publishedAtJ)
+	})
+
+	return publishedContent
 }
 
 // Debug prints the cache content in a pretty, hierarchical way
@@ -110,6 +134,12 @@ func (pp *PreProcessor) Debug() {
 // Sync aligns data obtained from the file with the Meta in FileData struct
 func (pp *PreProcessor) Sync() error {
 	const marginOfError = time.Second
+
+	pp.All = []FileData{}
+	pp.BySection = make(map[string][]FileData)
+	pp.BySectionType = make(map[string]map[string][]FileData)
+	pp.ByTags = make(map[string][]FileData)
+	pp.ByPath = make(map[string]FileData)
 
 	for path, fileData := range pp.Data {
 		filePath := filepath.Join(pp.Root, path)
@@ -141,7 +171,7 @@ func (pp *PreProcessor) Sync() error {
 		}
 
 		// Update the section accordingly without writing the file again
-		sectionUpdated := CorrectSection(filePath, &fileData.Meta)
+		sectionUpdated := pp.updateSection(filePath, &fileData.Meta)
 		if sectionUpdated {
 			updated = true
 		}
@@ -169,12 +199,38 @@ func (pp *PreProcessor) Sync() error {
 
 			fmt.Printf("updated file: %s\n", filePath)
 		}
+
+		if fileData.Published {
+			pp.All = append(pp.All, fileData)
+
+			section := fileData.Meta.Section
+			pp.BySection[section] = append(pp.BySection[section], fileData)
+
+			sectionType := fileData.Meta.Type
+			if pp.BySectionType[section] == nil {
+				pp.BySectionType[section] = make(map[string][]FileData)
+			}
+			pp.BySectionType[section][sectionType] = append(pp.BySectionType[section][sectionType], fileData)
+
+			for _, tag := range fileData.Meta.Tags {
+				pp.ByTags[tag] = append(pp.ByTags[tag], fileData)
+			}
+
+			pp.ByPath[path] = fileData
+		}
 	}
+
+	pp.sortAll()
+	pp.sortBySection()
+	pp.sortBySectionType()
+	pp.sortByTags()
 
 	return nil
 }
 
-func CorrectSection(mdPath string, meta *Meta) bool {
+// updateSection updates the section property in the Meta struct based on the directory of the markdown file.
+// Returns true if the section was updated, false otherwise.
+func (pp *PreProcessor) updateSection(mdPath string, meta *Meta) bool {
 	dir := filepath.Dir(mdPath)
 	dir = strings.TrimPrefix(dir, "content/")
 	parts := strings.Split(dir, string(os.PathSeparator))
@@ -191,6 +247,32 @@ func CorrectSection(mdPath string, meta *Meta) bool {
 	return false
 }
 
+// GetAllPublished returns all published content ordered by PublishedAt date (newest first)
+func (pp *PreProcessor) GetAllPublished() []FileData {
+	return pp.All
+}
+
+// GetPublishedBySection returns published content for a specific section ordered by PublishedAt date (newest first)
+func (pp *PreProcessor) GetPublishedBySection(section string) []FileData {
+	return pp.BySection[section]
+}
+
+// GetPublishedBySectionType returns published content for a specific section and type ordered by PublishedAt date (newest first)
+func (pp *PreProcessor) GetPublishedBySectionType(section, sectionType string) []FileData {
+	return pp.BySectionType[section][sectionType]
+}
+
+// GetPublishedByTag returns published content for a specific tag ordered by PublishedAt date (newest first)
+func (pp *PreProcessor) GetPublishedByTag(tag string) []FileData {
+	return pp.ByTags[tag]
+}
+
+// GetPublishedByPath returns published content for a specific path
+func (pp *PreProcessor) GetPublishedByPath(path string) (FileData, bool) {
+	fileData, exists := pp.ByPath[path]
+	return fileData, exists
+}
+
 func (fd *FileData) UpdatePublishedStatus() {
 	if fd.Meta.PublishedAt == "" {
 		fd.Published = false
@@ -204,4 +286,67 @@ func (fd *FileData) UpdatePublishedStatus() {
 	}
 
 	fd.Published = time.Now().After(publishedAt)
+}
+
+func (pp *PreProcessor) sortAll() {
+	sort.Slice(pp.All, func(i, j int) bool {
+		publishedAtI, _ := time.Parse(time.RFC3339, pp.All[i].Meta.PublishedAt)
+		publishedAtJ, _ := time.Parse(time.RFC3339, pp.All[j].Meta.PublishedAt)
+		return publishedAtI.After(publishedAtJ)
+	})
+}
+
+func (pp *PreProcessor) sortBySection() {
+	for section, files := range pp.BySection {
+		sort.Slice(files, func(i, j int) bool {
+			publishedAtI, _ := time.Parse(time.RFC3339, files[i].Meta.PublishedAt)
+			publishedAtJ, _ := time.Parse(time.RFC3339, files[j].Meta.PublishedAt)
+			return publishedAtI.After(publishedAtJ)
+		})
+		pp.BySection[section] = files
+	}
+}
+
+func (pp *PreProcessor) sortBySectionType() {
+	for section, types := range pp.BySectionType {
+		for sectionType, files := range types {
+			sort.Slice(files, func(i, j int) bool {
+				publishedAtI, _ := time.Parse(time.RFC3339, files[i].Meta.PublishedAt)
+				publishedAtJ, _ := time.Parse(time.RFC3339, files[j].Meta.PublishedAt)
+				return publishedAtI.After(publishedAtJ)
+			})
+			pp.BySectionType[section][sectionType] = files
+		}
+	}
+}
+
+func (pp *PreProcessor) sortByTags() {
+	for tag, files := range pp.ByTags {
+		sort.Slice(files, func(i, j int) bool {
+			publishedAtI, _ := time.Parse(time.RFC3339, files[i].Meta.PublishedAt)
+			publishedAtJ, _ := time.Parse(time.RFC3339, files[j].Meta.PublishedAt)
+			return publishedAtI.After(publishedAtJ)
+		})
+		pp.ByTags[tag] = files
+	}
+}
+
+// GetAllPublishedPaginated returns a paginated list of all published content
+func (pp *PreProcessor) GetAllPublishedPaginated(page, pageSize int) ([]FileData, error) {
+	return Paginate(pp.All, page, pageSize)
+}
+
+// GetPublishedBySectionPaginated returns a paginated list of published content for a specific section
+func (pp *PreProcessor) GetPublishedBySectionPaginated(section string, page, pageSize int) ([]FileData, error) {
+	return Paginate(pp.BySection[section], page, pageSize)
+}
+
+// GetPublishedBySectionTypePaginated returns a paginated list of published content for a specific section and type
+func (pp *PreProcessor) GetPublishedBySectionTypePaginated(section, sectionType string, page, pageSize int) ([]FileData, error) {
+	return Paginate(pp.BySectionType[section][sectionType], page, pageSize)
+}
+
+// GetPublishedByTagPaginated returns a paginated list of published content for a specific tag
+func (pp *PreProcessor) GetPublishedByTagPaginated(tag string, page, pageSize int) ([]FileData, error) {
+	return Paginate(pp.ByTags[tag], page, pageSize)
 }

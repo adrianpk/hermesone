@@ -75,6 +75,7 @@ func GenHTML() error {
 				}
 
 				layoutPath := findLayout(path)
+				fmt.Println(layoutPath)
 				if layoutPath != "" {
 					tmpl, err := template.New("webpage").Funcs(template.FuncMap{
 						"safeHTML": func(s string) template.HTML { return template.HTML(s) },
@@ -131,12 +132,109 @@ func GenHTML() error {
 		return err
 	}
 
+	rootIndexPath := filepath.Join(contentDir, "root", "index.md")
+	rootIndexOutputPath := filepath.Join(outputDir, "index.html")
+	if _, err := os.Stat(rootIndexPath); os.IsNotExist(err) {
+		err = genDefaultIndex(pp, rootIndexPath, rootIndexOutputPath)
+		if err != nil {
+			return fmt.Errorf("error generating custom index.html: %w", err)
+		}
+	}
+
 	err = addNoJekyll()
 	if err != nil {
 		return fmt.Errorf("error adding .nojekyll file: %w", err)
 	}
 
 	log.Println("content generated!")
+	return nil
+}
+
+// genDefaultIndex generates the default index.html file.
+// If no index.md is provided for the section then this one is ussed as default. It renders a list of all published content for this section.
+// This is a WIP, a lot of logging is present to help debug the process. It will be removed as soon the loggic is stable.
+// Also, there are a lot of hardcoded values that will be replaced by dinamic ones.
+// Finally, this is generating the default index for the root section, it includes references to all the content in the site.
+// We will also need a similar logic to generate the section index when content is not provided for it. This will show all the content for the specific section.
+// Worth mentioning that the partial used to render the content should also be improved to show a nice presentation of the content (image, title, excerpt, etc).
+func genDefaultIndex(pp *hermes.PreProcessor, rootIndexPath, outputPath string) error {
+	log.Println("starting genDefaultIndex")
+
+	publishedContent := pp.GetAllPublished()
+	log.Println("retrieved published content")
+
+	partialTemplatePath := "layout/default/partials/_index.html"
+	log.Printf("using partial template: %s\n", partialTemplatePath)
+
+	partialTmpl, err := template.New("_index.html").ParseFiles(partialTemplatePath)
+	if err != nil {
+		log.Printf("error parsing partial template: %v\n", err)
+		return err
+	}
+	log.Println("parsed partial template successfully")
+
+	var partialBuf bytes.Buffer
+
+	err = partialTmpl.Execute(&partialBuf, publishedContent)
+	if err != nil {
+		log.Printf("error executing partial template: %v\n", err)
+		return err
+	}
+	log.Println("executed partial template successfully")
+	log.Printf("partial template output:\n%s\n", partialBuf.String())
+
+	content := map[string]interface{}{
+		"HTML": partialBuf.String(),
+	}
+	log.Printf("content for layout template: %+v\n", content)
+
+	layoutPath := findLayout(rootIndexPath)
+	if layoutPath == "" {
+		return fmt.Errorf("no layout found for %s", rootIndexPath)
+	}
+	log.Printf("found layout: %s\n", layoutPath)
+
+	layoutTmpl, err := template.New("webpage").Funcs(template.FuncMap{
+		"safeHTML": func(s string) template.HTML { return template.HTML(s) },
+	}).ParseFiles(layoutPath)
+	if err != nil {
+		log.Printf("error parsing layout template: %v\n", err)
+		return err
+	}
+	log.Println("parsed layout template successfully")
+
+	err = os.MkdirAll(filepath.Dir(outputPath), os.ModePerm)
+	if err != nil {
+		log.Printf("error creating directories: %v\n", err)
+		return err
+	}
+	log.Printf("created directories for output path: %s\n", outputPath)
+
+	outputFile, err := os.Create(outputPath)
+	if err != nil {
+		log.Printf("error creating output file: %v\n", err)
+		return err
+	}
+	defer outputFile.Close()
+	log.Printf("created output file: %s\n", outputPath)
+
+	var finalBuf bytes.Buffer
+
+	err = layoutTmpl.Execute(&finalBuf, content)
+	if err != nil {
+		log.Printf("error executing layout template: %v\n", err)
+		return err
+	}
+	log.Println("executed layout template successfully")
+	log.Printf("layout template output:\n%s\n", finalBuf.String())
+
+	_, err = finalBuf.WriteTo(outputFile)
+	if err != nil {
+		log.Printf("error writing to output file: %v\n", err)
+		return err
+	}
+
+	log.Println("finished genDefaultIndex")
 	return nil
 }
 
