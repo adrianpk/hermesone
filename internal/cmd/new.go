@@ -76,18 +76,8 @@ func NewNewCmd() *cobra.Command {
 				return
 			}
 
-			if section == "" {
-				section = "root"
-			}
-
-			validContentTypes := []string{"article", "blog", "page", "series"}
-			if contentType == "" {
-				contentType = "article"
-				log.Println("Info: content type not provided, defaulting to 'article'")
-			} else if !contains(validContentTypes, contentType) {
-				log.Fatalf("Error: invalid content type: %s. Must be one of %v", contentType, validContentTypes)
-			}
-
+			section :=  hermes.ValidSectionOrDef(section)
+			contentType := hermes.ValidTypeOrDef(contentType)
 			slug := strings.ToLower(strings.ReplaceAll(name, " ", "-"))
 			fileName := fmt.Sprintf("%s.md", slug)
 			dirPath := filepath.Join("content", section, contentType)

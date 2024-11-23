@@ -10,14 +10,6 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-const (
-	contentRoot = "content"
-)
-
-var (
-	separator = []byte("---\n")
-)
-
 func Parse(content []byte, path string) (Content, error) {
 	var parsed Content
 
@@ -70,7 +62,7 @@ func updateImgPaths(mdContent []byte, path string) []byte {
 
 func modifyImagePath(imagePath, mdPath string) string {
 	imageDir := strings.TrimSuffix(mdPath, filepath.Ext(mdPath))
-	relativeImageDir := strings.TrimPrefix(imageDir, contentRoot+"/")
+	relativeImageDir := strings.TrimPrefix(imageDir, ContentDir+"/")
 
 	if strings.HasPrefix(relativeImageDir, "root/") {
 		relativeImageDir = strings.TrimPrefix(relativeImageDir, "root/")

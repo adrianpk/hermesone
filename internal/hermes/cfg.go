@@ -14,10 +14,12 @@ const (
 )
 
 type Config struct {
-	Name    string     `yaml:"name"`
-	Git     GitConfig  `yaml:"git"`
-	PubRepo RepoConfig `yaml:"pubRepo"`
-	BakRepo RepoConfig `yaml:"bakRepo"`
+	Name     string     `yaml:"name"`
+	Git      GitConfig  `yaml:"git"`
+	PubRepo  RepoConfig `yaml:"pubRepo"`
+	BakRepo  RepoConfig `yaml:"bakRepo"`
+	Menu     []string   `yaml:"menu"`
+	Sections []Section  `yaml:"sections"`
 }
 
 type GitConfig struct {
@@ -31,13 +33,11 @@ type RepoConfig struct {
 	Update string `yaml:"update"`
 }
 
-// cfgYAML is the template for the hermes.yml configuration file.
-// name is the name of the project.
-// repo is the repository information.
-// user is the GitHub username.
-// name is the repository name.
-// main is the main branch.
-// pub is the branch to publish to.
+type Section struct {
+	Name         string   `yaml:"name"`
+	ContentTypes []string `yaml:"content_types"`
+}
+
 const cfgYAML = `name: {{.Name}}
 git:
   user: {{.Git.User}}
@@ -47,9 +47,20 @@ pubRepo:
 bakRepo:
   name: {{.BakRepo.Name}}
   main: {{.BakRepo.Main}}
-  update: {{.BakRepo.Update}}`
+  update: {{.BakRepo.Update}}
+menu:
+{{- range .Menu }}
+  - {{ . }}
+{{- end }}
+sections:
+{{- range .Sections }}
+  - name: {{ .Name }}
+    content_types:
+    {{- range .ContentTypes }}
+      - {{ . }}
+    {{- end }}
+{{- end }}`
 
-// NewCfgFile creates a new configuration file with default values for repo name, main branch, and pub branch.
 func NewCfgFile(name string, user string) error {
 	file, err := os.Create("hermes.yml")
 	if err != nil {
@@ -72,9 +83,20 @@ func NewCfgFile(name string, user string) error {
 			Pub:  "gh-pages",
 		},
 		BakRepo: RepoConfig{
-			Name:   "something",
+			Name:   "site.hermes.3",
 			Main:   "main",
-			Update: "update",
+			Update: "new/wip",
+		},
+		Menu: []string{"about-us", "contact"},
+		Sections: []Section{
+			{
+				Name:         "root",
+				ContentTypes: []string{"articles", "blog", "series"},
+			},
+			{
+				Name:         "section",
+				ContentTypes: []string{"articles", "blog", "series"},
+			},
 		},
 	}
 

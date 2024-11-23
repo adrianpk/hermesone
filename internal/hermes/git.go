@@ -10,16 +10,12 @@ import (
 	"time"
 )
 
-const (
-	outputDir = "output"
-)
-
 func PublishToGitHubPages(cfg Config) error {
 	repoURL := cfg.PubRepoURL()
 	pubBranch := cfg.PubRepo.Pub
 	mainBranch := cfg.PubRepo.Main
 
-	err := os.Chdir(outputDir)
+	err := os.Chdir(OutputDir)
 	if err != nil {
 		return err
 	}
