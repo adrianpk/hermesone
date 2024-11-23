@@ -27,11 +27,11 @@ func Upgrade(dirs []string, layoutFS embed.FS) error {
 	}
 
 	files := []string{
-		defaultLayoutFile,
-		filepath.Join(defaultLayoutDir, articles, defaultLayout),
-		filepath.Join(defaultLayoutDir, blog, defaultLayout),
-		filepath.Join(defaultLayoutDir, pages, defaultLayout),
-		filepath.Join(defaultLayoutDir, series, defaultLayout),
+		hermes.DefLayoutFile,
+		filepath.Join(hermes.DefLayoutPath, ct.Article, hermes.DefLayout),
+		filepath.Join(hermes.DefLayoutPath, ct.Blog, hermes.DefLayout),
+		filepath.Join(hermes.DefLayoutPath, ct.Page, hermes.DefLayout),
+		filepath.Join(hermes.DefLayoutPath, ct.Series, hermes.DefLayout),
 	}
 
 	for _, file := range files {

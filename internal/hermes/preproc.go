@@ -133,7 +133,7 @@ func (pp *PreProcessor) Debug() {
 
 // Sync aligns data obtained from the file with the Meta in FileData struct
 func (pp *PreProcessor) Sync() error {
-	const marginOfError = time.Second
+	const timeframe = time.Second
 
 	pp.All = []FileData{}
 	pp.BySection = make(map[string][]FileData)
@@ -165,7 +165,7 @@ func (pp *PreProcessor) Sync() error {
 			return err
 		}
 
-		if fileModTime.Sub(fileInfo.ModTime()) > marginOfError || fileInfo.ModTime().Sub(fileModTime) > marginOfError {
+		if fileModTime.Sub(fileInfo.ModTime()) > timeframe || fileInfo.ModTime().Sub(fileModTime) > timeframe {
 			fileData.Meta.UpdatedAt = time.Now().Format(time.RFC3339)
 			updated = true
 		}
@@ -220,10 +220,17 @@ func (pp *PreProcessor) Sync() error {
 		}
 	}
 
-	pp.sortAll()
 	pp.sortBySection()
+	//pp.PrintBySection()
+
 	pp.sortBySectionType()
+	//pp.PrintBySectionType()
+
 	pp.sortByTags()
+	//pp.PrintByTags()
+
+	pp.sortByIndex()
+	pp.PrintByIndex()
 
 	return nil
 }
@@ -245,6 +252,25 @@ func (pp *PreProcessor) updateSection(mdPath string, meta *Meta) bool {
 	}
 
 	return false
+}
+
+func (pp *PreProcessor) GetAllPublishedPaginated(page, pageSize int) ([]FileData, error) {
+	return Paginate(pp.All, page, pageSize)
+}
+
+// GetPublishedBySectionPaginated returns a paginated list of published content for a specific section
+func (pp *PreProcessor) GetPublishedBySectionPaginated(section string, page, pageSize int) ([]FileData, error) {
+	return Paginate(pp.BySection[section], page, pageSize)
+}
+
+// GetPublishedBySectionTypePaginated returns a paginated list of published content for a specific section and type
+func (pp *PreProcessor) GetPublishedBySectionTypePaginated(section, sectionType string, page, pageSize int) ([]FileData, error) {
+	return Paginate(pp.BySectionType[section][sectionType], page, pageSize)
+}
+
+// GetPublishedByTagPaginated returns a paginated list of published content for a specific tag
+func (pp *PreProcessor) GetPublishedByTagPaginated(tag string, page, pageSize int) ([]FileData, error) {
+	return Paginate(pp.ByTags[tag], page, pageSize)
 }
 
 // GetAllPublished returns all published content ordered by PublishedAt date (newest first)
@@ -289,64 +315,141 @@ func (fd *FileData) UpdatePublishedStatus() {
 }
 
 func (pp *PreProcessor) sortAll() {
-	sort.Slice(pp.All, func(i, j int) bool {
-		publishedAtI, _ := time.Parse(time.RFC3339, pp.All[i].Meta.PublishedAt)
-		publishedAtJ, _ := time.Parse(time.RFC3339, pp.All[j].Meta.PublishedAt)
-		return publishedAtI.After(publishedAtJ)
-	})
+	validFiles := []FileData{}
+	for _, file := range pp.All {
+		if isPublicable(file) {
+			validFiles = append(validFiles, file)
+		}
+	}
+	sortFileData(validFiles)
+	pp.All = validFiles
 }
 
 func (pp *PreProcessor) sortBySection() {
 	for section, files := range pp.BySection {
-		sort.Slice(files, func(i, j int) bool {
-			publishedAtI, _ := time.Parse(time.RFC3339, files[i].Meta.PublishedAt)
-			publishedAtJ, _ := time.Parse(time.RFC3339, files[j].Meta.PublishedAt)
-			return publishedAtI.After(publishedAtJ)
-		})
-		pp.BySection[section] = files
+		validFiles := []FileData{}
+		for _, file := range files {
+			if isPublicable(file) {
+				validFiles = append(validFiles, file)
+			}
+		}
+		sortFileData(validFiles)
+		pp.BySection[section] = validFiles
 	}
 }
 
 func (pp *PreProcessor) sortBySectionType() {
 	for section, types := range pp.BySectionType {
 		for sectionType, files := range types {
-			sort.Slice(files, func(i, j int) bool {
-				publishedAtI, _ := time.Parse(time.RFC3339, files[i].Meta.PublishedAt)
-				publishedAtJ, _ := time.Parse(time.RFC3339, files[j].Meta.PublishedAt)
-				return publishedAtI.After(publishedAtJ)
-			})
-			pp.BySectionType[section][sectionType] = files
+			validFiles := []FileData{}
+			for _, file := range files {
+				if isPublicable(file) {
+					validFiles = append(validFiles, file)
+				}
+			}
+			sortFileData(validFiles)
+			pp.BySectionType[section][sectionType] = validFiles
 		}
 	}
 }
 
 func (pp *PreProcessor) sortByTags() {
 	for tag, files := range pp.ByTags {
-		sort.Slice(files, func(i, j int) bool {
-			publishedAtI, _ := time.Parse(time.RFC3339, files[i].Meta.PublishedAt)
-			publishedAtJ, _ := time.Parse(time.RFC3339, files[j].Meta.PublishedAt)
-			return publishedAtI.After(publishedAtJ)
-		})
-		pp.ByTags[tag] = files
+		validFiles := []FileData{}
+		for _, file := range files {
+			if isPublicable(file) {
+				validFiles = append(validFiles, file)
+			}
+		}
+		sortFileData(validFiles)
+		pp.ByTags[tag] = validFiles
 	}
 }
 
-// GetAllPublishedPaginated returns a paginated list of all published content
-func (pp *PreProcessor) GetAllPublishedPaginated(page, pageSize int) ([]FileData, error) {
-	return Paginate(pp.All, page, pageSize)
+func (pp *PreProcessor) sortByIndex() {
+	var indexPages []FileData
+	for path, fileData := range pp.Data {
+		if strings.HasSuffix(path, IndexMdFile) && fileData.Meta.IsIndex() && isPublicable(fileData) {
+			fileData.Meta.FilePath = path
+			indexPages = append(indexPages, fileData)
+		}
+	}
+	sortFileData(indexPages)
+	pp.ByPath = make(map[string]FileData)
+	for _, file := range indexPages {
+		pp.ByPath[file.Meta.Title] = file
+	}
 }
 
-// GetPublishedBySectionPaginated returns a paginated list of published content for a specific section
-func (pp *PreProcessor) GetPublishedBySectionPaginated(section string, page, pageSize int) ([]FileData, error) {
-	return Paginate(pp.BySection[section], page, pageSize)
+func isPublicable(fileData FileData) bool {
+	publishedAt, err := time.Parse(time.RFC3339, fileData.Meta.PublishedAt)
+	if err != nil || fileData.Meta.Draft || time.Now().Before(publishedAt) {
+		return false
+	}
+	return true
 }
 
-// GetPublishedBySectionTypePaginated returns a paginated list of published content for a specific section and type
-func (pp *PreProcessor) GetPublishedBySectionTypePaginated(section, sectionType string, page, pageSize int) ([]FileData, error) {
-	return Paginate(pp.BySectionType[section][sectionType], page, pageSize)
+func sortFileData(files []FileData) {
+	sort.Slice(files, func(i, j int) bool {
+		publishedAtI, _ := time.Parse(time.RFC3339, files[i].Meta.PublishedAt)
+		publishedAtJ, _ := time.Parse(time.RFC3339, files[j].Meta.PublishedAt)
+		return publishedAtI.After(publishedAtJ)
+	})
 }
 
-// GetPublishedByTagPaginated returns a paginated list of published content for a specific tag
-func (pp *PreProcessor) GetPublishedByTagPaginated(tag string, page, pageSize int) ([]FileData, error) {
-	return Paginate(pp.ByTags[tag], page, pageSize)
+// PrintBySection prints the sorted items by section
+func (pp *PreProcessor) PrintBySection() {
+	fmt.Println("sorted by section:")
+	for section, files := range pp.BySection {
+		fmt.Printf("section: %s\n", section)
+		for _, file := range files {
+			fmt.Printf("  file: %s, published at: %s\n", file.Meta.Title, file.Meta.PublishedAt)
+		}
+	}
+}
+
+// PrintBySectionType prints the sorted items by section type
+func (pp *PreProcessor) PrintBySectionType() {
+	fmt.Println("sorted by Section type:")
+	for section, types := range pp.BySectionType {
+		fmt.Printf("section: %s\n", section)
+		for sectionType, files := range types {
+			fmt.Printf("  type: %s\n", sectionType)
+			for _, file := range files {
+				fmt.Printf("    file: %s, published at: %s\n", file.Meta.Title, file.Meta.PublishedAt)
+			}
+		}
+	}
+}
+
+// PrintByTags prints the sorted items by tags
+func (pp *PreProcessor) PrintByTags() {
+	fmt.Println("sorted by tags:")
+	for tag, files := range pp.ByTags {
+		fmt.Printf("tag: %s\n", tag)
+		for _, file := range files {
+			fmt.Printf("  file: %s, published at: %s\n", file.Meta.Title, file.Meta.PublishedAt)
+		}
+	}
+}
+
+// PrintByIndex prints the sorted index pages
+func (pp *PreProcessor) PrintByIndex() {
+	fmt.Println("sorted index pages:")
+	for _, file := range pp.ByPath {
+		fmt.Printf("  file: %s, published at: %s, path: %s\n", file.Meta.Title, file.Meta.PublishedAt, file.Meta.FilePath)
+	}
+}
+
+func (fd *FileData) IsIndex() bool {
+	return fd.Meta.IsIndex()
+}
+
+func (fd *FileData) IsIndexable() bool {
+	return fd.Meta.IsIndexable()
+}
+
+// IsPublished checks if the file is published.
+func (fd *FileData) IsPublished() bool {
+	return fd.Meta.IsPublished()
 }

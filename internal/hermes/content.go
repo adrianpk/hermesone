@@ -1,5 +1,30 @@
 package hermes
 
+import (
+	"errors"
+	"log"
+	"time"
+)
+
+var (
+	validTypes = map[string]bool{
+		ContentType.Article: true,
+		ContentType.Blog:    true,
+		ContentType.Series:  true,
+	}
+
+	indexTypes = map[string]bool{
+		ContentType.Page:    true,
+		ContentType.Article: true,
+	}
+
+	indexableTypes = map[string]bool{
+		ContentType.Article: true,
+		ContentType.Blog:    true,
+		ContentType.Series:  true,
+	}
+)
+
 type Content struct {
 	Meta     Meta
 	Markdown []byte
@@ -9,6 +34,7 @@ type Content struct {
 type Meta struct {
 	Title           string   `yaml:"title"`        // Title of the content
 	Description     string   `yaml:"description"`  // Description of the content
+	FilePath        string   `json:"file_path"`    // File path of the content
 	Summary         string   `yaml:"summary"`      // Summary of the content
 	Date            string   `yaml:"date"`         // Date of the content
 	PublishedAt     string   `yaml:"published-at"` // Publish date of the content
@@ -41,4 +67,80 @@ type Meta struct {
 type Sitemap struct {
 	Priority   float64 `yaml:"priority"`
 	ChangeFreq string  `yaml:"changefreq"`
+}
+
+func (m *Meta) PublicationDate() (t time.Time, err error) {
+	if m.PublishedAt == "" {
+		return t, errors.New("no publication date defined")
+	}
+
+	formats := []string{
+		time.RFC3339,                // 2006-01-02T15:04:05Z07:00
+		"2006-01-02",                // 2006-01-02
+		"2006-01-02 15:04:05",       // 2006-01-02 15:04:05
+		"2006-01-02 15:04",          // 2006-01-02 15:04
+		"2006-01-02 15:04:05 -0700", // 2006-01-02 15:04:05 -0700
+	}
+
+	for _, format := range formats {
+		publishedAt, err := time.Parse(format, m.PublishedAt)
+		if err == nil {
+			return publishedAt, nil
+		}
+	}
+
+	log.Printf("error parsing publication date: %v", err)
+	return t, errors.New("invalid publication date format")
+}
+
+func (m *Meta) IsPublished() bool {
+	if m.Draft {
+		return false
+	}
+
+	publishedAt, err := m.PublicationDate()
+	if err != nil {
+		//log.Printf("error getting publication date for '%s': %v", m.FilePath, err)
+		return false
+	}
+
+	return time.Now().After(publishedAt)
+}
+
+func (m *Meta) IsIndexable() bool {
+	if !m.IsPublished() {
+		return false
+	}
+
+	if !indexableTypes[m.Type] {
+		return false
+	}
+
+	return true
+}
+
+func (m *Meta) IsIndex() bool {
+	if !m.IsPublished() {
+		return false
+	}
+
+	return indexTypes[m.Type]
+}
+
+// ValidSectionOrDef lets easily check if a section is valid or return the default section.
+func ValidSectionOrDef(section string) string {
+	if section == "" {
+		return DefSection
+	}
+
+	return section
+}
+
+// ValidTypeOrDef lets easily check if a content type is valid or return the default type.
+func ValidTypeOrDef(contentType string) (defType string) {
+	if !validTypes[contentType] {
+		return ContentType.Article
+	}
+
+	return contentType
 }

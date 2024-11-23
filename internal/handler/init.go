@@ -4,20 +4,9 @@ import (
 	"embed"
 	"fmt"
 	"os"
-	"path/filepath"
 	"time"
-)
 
-const (
-	imgDir        = "img"
-	defaultLayout = "default.html"
-)
-
-var (
-	layoutDir         = "layout"
-	defaultLayoutDir  = filepath.Join(layoutDir, "default")
-	defaultLayoutFile = filepath.Join(defaultLayoutDir, defaultLayout)
-	backupLayoutPath  = filepath.Join(defaultLayoutDir, "default-%s.html.bak")
+	"github.com/adrianpk/gohermes/internal/hermes"
 )
 
 var (
@@ -32,20 +21,20 @@ func InitDirs(dirs []string, layoutFS embed.FS) error {
 		}
 	}
 
-	if _, err := os.Stat(defaultLayoutFile); err == nil {
+	if _, err := os.Stat(hermes.DefLayoutFile); err == nil {
 		timestamp := time.Now().Format("20060102150405")
-		err := os.Rename(defaultLayoutFile, fmt.Sprintf(backupLayoutPath, timestamp))
+		err := os.Rename(hermes.DefLayoutFile, fmt.Sprintf(hermes.BakLayoutPathFormat, timestamp))
 		if err != nil {
 			return err
 		}
 	}
 
-	content, err := layoutFS.ReadFile(defaultLayoutFile)
+	content, err := layoutFS.ReadFile(hermes.DefLayoutFile)
 	if err != nil {
 		return err
 	}
 
-	err = os.WriteFile(defaultLayoutFile, content, 0644)
+	err = os.WriteFile(hermes.DefLayoutFile, content, 0644)
 	if err != nil {
 		return err
 	}
