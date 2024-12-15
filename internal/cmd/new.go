@@ -13,55 +13,56 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// NewNewCmd creates a new content file with the specified properties.
-//
-// Example Usage:
-//
-// Assuming the hermes CLI tool is already built and available in your PATH, you can use the new command to create a new content file. Here is an example of how to use the command:
-//
-//	hermes new --name "How to Create New Content in Hermes" --type "article" --section "guides" --tags "tutorial,hermes" --author "Jane Doe,John Smith"
-//
-// Explanation::
-//
-// --name "How to Create New Content in Hermes": Specifies the name of the content. This will be converted to a slug (how-to-create-new-content-in-hermes.md).
-// --type "article": Specifies the type of the content. This will determine the subdirectory under the section.
-// --section "guides": Specifies the section of the content. This will determine the main directory under content.
-// --tags "tutorial,hermes": Specifies the tags for the content.
-// --author "Jane Doe,John Smith": Specifies the authors of the content.
-//
-// Resulting File Structure:
-//
-// After running the command, the following file structure will be created:
-//
-// content/
-// └── guides/
-//
-//	└── article/
-//	    └── how-to-create-new-content-in-hermes.md
-//
-// Resulting Markdown File:
-//
-// The content of how-to-create-new-content-in-hermes.md will be:
-//
-// ---
-// title: "How to Create New Content in Hermes"
-// description: ""
-// date: "2023-10-01"
-// published-at: "2023-10-01"
-// last-modified: "2023-10-01"
-// type: "article"
-// section: "guides"
-// slug: "how-to-create-new-content-in-hermes"
-// author:
-//   - "Jane Doe"
-//   - "John Smith"
-//
-// tags:
-//   - "tutorial"
-//   - "hermes"
-//
-// ---
-// # How to Create New Content in Hermes
+/*
+NewNewCmd creates a new content file with the specified properties.
+
+Example Usage:
+
+Assuming the hermes CLI tool is already built and available in your PATH, you can use the new command to create a new content file. Here is an example of how to use the command:
+
+	hermes new --name "How to Create New Content in Hermes" --type "article" --section "guides" --tags "tutorial,hermes" --author "Jane Doe,John Smith"
+
+Explanation:
+
+--name "How to Create New Content in Hermes": Specifies the name of the content. This will be converted to a slug (how-to-create-new-content-in-hermes.md).
+--type "article": Specifies the type of the content. This will determine the subdirectory under the section.
+--section "guides": Specifies the section of the content. This will determine the main directory under content.
+--tags "tutorial,hermes": Specifies the tags for the content.
+--author "Jane Doe,John Smith": Specifies the authors of the content.
+
+Resulting File Structure:
+
+After running the command, the following file structure will be created:
+
+content/
+└── guides/
+    └── article/
+        └── how-to-create-new-content-in-hermes.md
+
+Resulting Markdown File:
+
+The content of how-to-create-new-content-in-hermes.md will be:
+
+---
+title: "How to Create New Content in Hermes"
+description: ""
+date: "2023-10-01"
+published-at: "2023-10-01"
+last-modified: "2023-10-01"
+type: "article"
+section: "guides"
+slug: "how-to-create-new-content-in-hermes"
+author:
+  - "Jane Doe"
+  - "John Smith"
+
+tags:
+  - "tutorial"
+  - "hermes"
+
+---
+# How to Create New Content in Hermes
+*/
 func NewNewCmd() *cobra.Command {
 	var name, contentType, section string
 	var tags, authors []string
