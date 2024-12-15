@@ -58,9 +58,7 @@ func GenHTML() error {
 				}
 
 				layoutPath := findLayout(path)
-				fmt.Println(layoutPath)
 				if layoutPath != "" {
-
 					tmpl, err := template.New("webpage").Funcs(template.FuncMap{
 						"safeHTML": safeHTML,
 					}).ParseFiles(layoutPath)
@@ -328,6 +326,57 @@ func shouldRender(mdPath, htmlPath string) bool {
 
 // findLayout tries to find the layout file for the given markdown file.
 func findLayout(path string) string {
+	fmt.Println("")
+	fmt.Println("=== findLayout start ===")
+	defer func() {
+		fmt.Println("=== findLayout end ===")
+		fmt.Println("")
+	}()
+
+	fmt.Printf("Input path: %s\n", path)
+	path = strings.TrimPrefix(path, "content/")
+	fmt.Printf("Trimmed path: %s\n", path)
+
+	base := filepath.Base(path)
+	fmt.Printf("Base: %s\n", base)
+	base = strings.TrimSuffix(base, filepath.Ext(base))
+	fmt.Printf("Base without extension: %s\n", base)
+
+	dir := filepath.Dir(path)
+	fmt.Printf("Directory: %s\n", dir)
+	section, _ := sectionTypeSegments(path)
+	fmt.Printf("Section: %s\n", section)
+
+	secTypeLayoutDir := filepath.Join(hermes.LayoutDir, dir)
+	fmt.Printf("Section type layout directory: %s\n", secTypeLayoutDir)
+
+	secLayoutDir := filepath.Join(hermes.LayoutDir, section)
+	fmt.Printf("Section layout directory: %s\n", secLayoutDir)
+
+	layoutPaths := []string{
+		filepath.Join(secTypeLayoutDir, base+".html"),
+		filepath.Join(secTypeLayoutDir, hermes.DefLayout),
+		filepath.Join(secLayoutDir, hermes.DefLayout),
+		filepath.Join(hermes.DefLayoutPath, filepath.Base(dir), hermes.DefLayout),
+		filepath.Join(hermes.DefLayoutPath, base+".html"),
+		filepath.Join(hermes.DefLayoutPath, hermes.DefLayout),
+	}
+	fmt.Printf("Layout paths: %v\n", layoutPaths)
+
+	for _, layoutPath := range layoutPaths {
+		fmt.Printf("Checking layout path: %s\n", layoutPath)
+		if _, err := os.Stat(layoutPath); err == nil {
+			fmt.Printf("Found layout path: %s\n", layoutPath)
+			return layoutPath
+		}
+	}
+
+	fmt.Println("No layout path found")
+	return ""
+}
+
+// findLayout tries to find the layout file for the given markdown file.
+func findLayout2(path string) string {
 	path = strings.TrimPrefix(path, "content/")
 
 	base := filepath.Base(path)
