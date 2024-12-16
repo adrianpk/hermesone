@@ -230,7 +230,7 @@ func (pp *PreProcessor) Sync() error {
 	//pp.PrintByTags()
 
 	pp.sortByIndex()
-	pp.PrintByIndex()
+	// pp.PrintByIndex()
 
 	return nil
 }

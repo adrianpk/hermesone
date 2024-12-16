@@ -251,7 +251,7 @@ func processSections(contentDir, outputDir, layoutDir string, pp *hermes.PreProc
 		}
 	}
 
-	log.Println("finished processSections")
+	log.Println("finished process sections")
 	return nil
 }
 
