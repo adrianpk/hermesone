@@ -5,7 +5,7 @@ import "path/filepath"
 const (
 	ContentDir   = "content"
 	OutputDir    = "output"
-	LayoutDir    = "layout"
+	LayoutDir    = "assets/layout"
 	DefLayoutDir = "default"
 	ImgDir       = "img"
 	DefSection   = "root"

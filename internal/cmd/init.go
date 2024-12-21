@@ -11,7 +11,7 @@ import (
 
 const defName = "hermes-site"
 
-func NewInitCmd(layoutFS embed.FS) *cobra.Command {
+func NewInitCmd(assetsFS embed.FS) *cobra.Command {
 	var projectName string
 	var githubUser string
 
@@ -39,16 +39,11 @@ func NewInitCmd(layoutFS embed.FS) *cobra.Command {
 				"content/section/article",
 				"content/section/blog",
 				"content/section/series",
-				"layout/default",
-				"layout/default/page",
-				"layout/default/article",
-				"layout/default/blog",
-				"layout/default/series",
 				"output",
 				"store",
 			}
 
-			err := handler.InitDirs(dirs, layoutFS)
+			err := handler.InitDirs(dirs, assetsFS)
 			if err != nil {
 				log.Println("error initializing directories:", err)
 				return

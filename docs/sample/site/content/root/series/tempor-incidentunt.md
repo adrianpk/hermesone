@@ -1,11 +1,12 @@
 ---
 title: ""
 description: ""
+filepath: ""
 summary: ""
 date: ""
 published-at: ""
 created-at: "2024-11-15T10:22:14+01:00"
-updated-at: "2024-11-15T11:35:54+01:00"
+updated-at: "2024-12-22T09:27:12+01:00"
 type: ""
 section: root
 slug: ""

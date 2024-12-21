@@ -14,8 +14,7 @@ var (
 	}
 
 	indexTypes = map[string]bool{
-		ContentType.Page:    true,
-		ContentType.Article: true,
+		ContentType.Page: true,
 	}
 
 	indexableTypes = map[string]bool{
@@ -98,13 +97,12 @@ func (m *Meta) IsPublished() bool {
 		return false
 	}
 
-	publishedAt, err := m.PublicationDate()
+	pd, err := m.PublicationDate()
 	if err != nil {
-		//log.Printf("error getting publication date for '%s': %v", m.FilePath, err)
 		return false
 	}
 
-	return time.Now().After(publishedAt)
+	return time.Now().After(pd)
 }
 
 func (m *Meta) IsIndexable() bool {
@@ -143,4 +141,43 @@ func ValidTypeOrDef(contentType string) (defType string) {
 	}
 
 	return contentType
+}
+
+func (m Meta) CreatedAtPretty() string {
+	if m.CreatedAt == "" {
+		return "n/a"
+	}
+
+	createdAt, err := time.Parse(time.RFC3339, m.CreatedAt)
+	if err != nil {
+		return "n/a"
+	}
+
+	return createdAt.Format("January 2, 2006 15:04")
+}
+
+func (m Meta) PublishedAtPretty() string {
+	if m.PublishedAt == "" {
+		return "n/a"
+	}
+
+	publishedAt, err := time.Parse(time.RFC3339, m.PublishedAt)
+	if err != nil {
+		return "n/a"
+	}
+
+	return publishedAt.Format("January 2, 2006 15:04")
+}
+
+func (m Meta) UpdatedAtPretty() string {
+	if m.UpdatedAt == "" {
+		return "n/a"
+	}
+
+	updatedAt, err := time.Parse(time.RFC3339, m.UpdatedAt)
+	if err != nil {
+		return "n/a"
+	}
+
+	return updatedAt.Format("January 2, 2006 15:04")
 }

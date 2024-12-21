@@ -2,9 +2,7 @@ package hermes
 
 import (
 	"bytes"
-	"fmt"
 	"io"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -42,32 +40,33 @@ func Parse(content []byte, path string) (Content, error) {
 // It handles various node types such as images, links, headings, paragraphs, lists, etc.
 // At some point, the styles for each node type will be configurable.
 func (r *TailwindRenderer) RenderNode(w io.Writer, node *blackfriday.Node, entering bool) blackfriday.WalkStatus {
-	fmt.Printf("Rendering node: %v, entering: %v\n", node.Type, entering)
+	//fmt.Printf("Rendering node: %v, entering: %v\n", node.Type, entering)
 	switch node.Type {
-	case blackfriday.Document:
-		if entering {
-			w.Write([]byte(`<style>
-                .bullet-reset {
-                    list-style: none;
-                    padding: 0;
-                    margin: 0;
-                    position: relative;
-                    padding-left: 20px;
-                }
-                .bullet-reset::before {
-                    content: "\2022";
-                    position: absolute;
-                    left: 0;
-                    top: 0;
-                    color: black;
-                }
-            </style>`))
-		}
+	//case blackfriday.Document:
+	//  Uncomment this block to add custom CSS styles or any other content to the document
+	//	if entering {
+	//		w.Write([]byte(`<style>
+	//            .bullet-reset {
+	//                list-style: none;
+	//                padding: 0;
+	//                margin: 0;
+	//                position: relative;
+	//                padding-left: 20px;
+	//            }
+	//            .bullet-reset::before {
+	//                content: "\2022";
+	//                position: absolute;
+	//                left: 0;
+	//                top: 0;
+	//                color: black;
+	//            }
+	//        </style>`))
+	//	}
 	case blackfriday.Image:
 		if entering {
 			imagePath := string(node.LinkData.Destination)
 			modifiedPath := modifyImagePath(imagePath, r.path)
-			fmt.Printf("Modifying image path: %s -> %s\n", imagePath, modifiedPath)
+			//log.Printf("modifying image path: %s -> %s\n", imagePath, modifiedPath)
 			node.LinkData.Destination = []byte(modifiedPath)
 			w.Write([]byte(`<img src="` + modifiedPath + `" alt="` + string(node.LinkData.Title) + `" class="max-w-full h-auto">`))
 		}
@@ -76,7 +75,7 @@ func (r *TailwindRenderer) RenderNode(w io.Writer, node *blackfriday.Node, enter
 			linkPath := string(node.LinkData.Destination)
 			if strings.HasSuffix(linkPath, ".md") {
 				modifiedPath := strings.TrimSuffix(linkPath, ".md") + ".html"
-				fmt.Printf("Modifying link path: %s -> %s\n", linkPath, modifiedPath)
+				//log.Printf("modifying link path: %s -> %s\n", linkPath, modifiedPath)
 				node.LinkData.Destination = []byte(modifiedPath)
 			}
 			w.Write([]byte(`<a href="` + string(node.LinkData.Destination) + `" class="text-blue-500 underline">`))
@@ -229,70 +228,6 @@ func NewTailwindRenderer(path string) *TailwindRenderer {
 	}
 }
 
-// Remove this one after demonstrating that logic in RenderNode works in the same way
-func updatePaths(mdContent []byte, path string) []byte {
-	log.Println("Starting updatePaths")
-
-	node := blackfriday.New(blackfriday.WithExtensions(blackfriday.CommonExtensions)).Parse(mdContent)
-
-	node.Walk(func(node *blackfriday.Node, entering bool) blackfriday.WalkStatus {
-		if entering {
-			switch node.Type {
-			case blackfriday.Image:
-				imagePath := string(node.LinkData.Destination)
-				modifiedPath := modifyImagePath(imagePath, path)
-				log.Printf("Modifying image path: %s -> %s", imagePath, modifiedPath)
-				node.LinkData.Destination = []byte(modifiedPath)
-			case blackfriday.Link:
-				linkPath := string(node.LinkData.Destination)
-				if strings.HasSuffix(linkPath, ".md") {
-					modifiedPath := strings.TrimSuffix(linkPath, ".md") + ".html"
-					log.Printf("Modifying link path: %s -> %s", linkPath, modifiedPath)
-					node.LinkData.Destination = []byte(modifiedPath)
-				}
-			}
-		}
-		return blackfriday.GoToNext
-	})
-
-	var buf bytes.Buffer
-	renderer := blackfriday.NewHTMLRenderer(blackfriday.HTMLRendererParameters{})
-	renderer.RenderHeader(&buf, node)
-	node.Walk(func(node *blackfriday.Node, entering bool) blackfriday.WalkStatus {
-		renderer.RenderNode(&buf, node, entering)
-		return blackfriday.GoToNext
-	})
-	renderer.RenderFooter(&buf, node)
-
-	log.Println("Finished updatePaths")
-	return buf.Bytes()
-}
-
-// Remove this one after demonstrating that logic in RenderNode works in the same way
-func updateImgPaths(mdContent []byte, path string) []byte {
-	node := blackfriday.New(blackfriday.WithExtensions(blackfriday.CommonExtensions)).Parse(mdContent)
-
-	node.Walk(func(node *blackfriday.Node, entering bool) blackfriday.WalkStatus {
-		if node.Type == blackfriday.Image && entering {
-			imagePath := string(node.LinkData.Destination)
-			modifiedPath := modifyImagePath(imagePath, path)
-			node.LinkData.Destination = []byte(modifiedPath)
-		}
-		return blackfriday.GoToNext
-	})
-
-	var buf bytes.Buffer
-	renderer := blackfriday.NewHTMLRenderer(blackfriday.HTMLRendererParameters{})
-	renderer.RenderHeader(&buf, node)
-	node.Walk(func(node *blackfriday.Node, entering bool) blackfriday.WalkStatus {
-		renderer.RenderNode(&buf, node, entering)
-		return blackfriday.GoToNext
-	})
-	renderer.RenderFooter(&buf, node)
-
-	return buf.Bytes()
-}
-
 func modifyImagePath(imagePath, mdPath string) string {
 	imageDir := strings.TrimSuffix(mdPath, filepath.Ext(mdPath))
 	relativeImageDir := strings.TrimPrefix(imageDir, ContentDir+"/")
@@ -326,42 +261,4 @@ func modifyImagePath(imagePath, mdPath string) string {
 	}
 
 	return filepath.Join(relativeImageDir, filepath.Base(imagePath))
-}
-
-// Remove this one after demonstrating that logic in RenderNode works in the same way
-func updateDocPaths(mdContent []byte) []byte {
-	log.Println("Starting updateDocPaths")
-
-	log.Printf("Original Markdown content:\n%s", string(mdContent))
-
-	node := blackfriday.New(blackfriday.WithExtensions(blackfriday.CommonExtensions)).Parse(mdContent)
-
-	node.Walk(func(node *blackfriday.Node, entering bool) blackfriday.WalkStatus {
-		if node.Type == blackfriday.Link && entering {
-			linkPath := string(node.LinkData.Destination)
-			log.Printf("Found link: %s", linkPath)
-			if strings.HasSuffix(linkPath, ".md") {
-				modifiedPath := strings.TrimSuffix(linkPath, ".md") + ".html"
-				log.Printf("Modifying link: %s -> %s", linkPath, modifiedPath)
-				node.LinkData.Destination = []byte(modifiedPath)
-			} else {
-				log.Printf("Link does not end with .md: %s", linkPath)
-			}
-		} else {
-			log.Printf("Node type: %v, entering: %v", node.Type, entering)
-		}
-		return blackfriday.GoToNext
-	})
-
-	var buf bytes.Buffer
-	renderer := blackfriday.NewHTMLRenderer(blackfriday.HTMLRendererParameters{})
-	renderer.RenderHeader(&buf, node)
-	node.Walk(func(node *blackfriday.Node, entering bool) blackfriday.WalkStatus {
-		renderer.RenderNode(&buf, node, entering)
-		return blackfriday.GoToNext
-	})
-	renderer.RenderFooter(&buf, node)
-
-	log.Println("Finished updateDocPaths")
-	return buf.Bytes()
 }

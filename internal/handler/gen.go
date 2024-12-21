@@ -13,8 +13,15 @@ import (
 	"github.com/adrianpk/gohermes/internal/hermes"
 )
 
+const debug = false
+
 // GenHTML generates the HTML files from the markdown files.
 func GenHTML() error {
+	err := hermes.CheckHermes()
+	if err != nil {
+		return err
+	}
+
 	pp, err := startPreProcessor(hermes.ContentDir)
 	if err != nil {
 		return err
@@ -28,13 +35,11 @@ func GenHTML() error {
 		if !info.IsDir() && filepath.Ext(path) == ".md" {
 			relativePath, err := filepath.Rel(hermes.ContentDir, path)
 			if err != nil {
-				log.Printf("error getting relative path for %s: %v", path, err)
 				return nil
 			}
 
 			fileData, exists := pp.FindFileData(relativePath)
 			if !exists {
-				log.Printf("file data not found for %s", relativePath)
 				return nil
 			}
 
@@ -47,13 +52,11 @@ func GenHTML() error {
 			if shouldRender(path, outputPath) {
 				fileContent, err := os.ReadFile(path)
 				if err != nil {
-					log.Printf("error reading file %s: %v", path, err)
 					return nil
 				}
 
 				content, err := hermes.Parse(fileContent, path)
 				if err != nil {
-					log.Printf("error parsing file %s: %v", path, err)
 					return nil
 				}
 
@@ -97,7 +100,7 @@ func GenHTML() error {
 
 					err = copyImages(path, outputPath)
 					if err != nil {
-						log.Printf("error copying images for %s: %v", path, err)
+						//log.Printf("error copying images for %s: %v", path, err)
 						return nil
 					}
 
@@ -114,7 +117,7 @@ func GenHTML() error {
 		return err
 	}
 
-	err = processRootSection(hermes.ContentDir, hermes.OutputDir, hermes.LayoutDir, pp)
+	err = processRootSection(hermes.ContentDir, hermes.OutputDir, "assets/layout", pp)
 	if err != nil {
 		return fmt.Errorf("error processing root section: %w", err)
 	}
@@ -126,7 +129,7 @@ func GenHTML() error {
 
 	sections := cfg.Sections
 
-	err = processSections(hermes.ContentDir, hermes.OutputDir, hermes.LayoutDir, pp, sections)
+	err = processSections(hermes.ContentDir, hermes.OutputDir, "assets/layout", pp, sections)
 	if err != nil {
 		return fmt.Errorf("error processing sections: %w", err)
 	}
@@ -136,15 +139,56 @@ func GenHTML() error {
 		return fmt.Errorf("error adding .nojekyll file: %w", err)
 	}
 
+	// Copy the assets/css directory to the output/css directory
+	err = copyCSS("assets/css", filepath.Join(hermes.OutputDir, "css"))
+	if err != nil {
+		return fmt.Errorf("error copying CSS directory: %w", err)
+	}
+
 	log.Println("content generated!")
 	return nil
 }
 
+// copyCSS copies the assets/css directory to the output/css directory.
+func copyCSS(srcDir, destDir string) error {
+	return filepath.Walk(srcDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		relPath, err := filepath.Rel(srcDir, path)
+		if err != nil {
+			return err
+		}
+
+		destPath := filepath.Join(destDir, relPath)
+
+		if info.IsDir() {
+			return os.MkdirAll(destPath, os.ModePerm)
+		}
+
+		srcFile, err := os.Open(path)
+		if err != nil {
+			return err
+		}
+		defer srcFile.Close()
+
+		destFile, err := os.Create(destPath)
+		if err != nil {
+			return err
+		}
+		defer destFile.Close()
+
+		_, err = io.Copy(destFile, srcFile)
+		return err
+	})
+}
+
 // genDefaultIndex generates the default index.html file.
-// If no index.md is provided for the section then this one is ussed as default. It renders a list of all published
+// If no index.md is provided for the section then this one is used as default. It renders a list of all published
 // content for this section.
-// This is a WIP, a lot of logging is present to help debug the process. It will be removed as soon the loggic is
-// stable. Also, there are a lot of hardcoded values that will be replaced by dinamic ones.
+// This is a WIP, a lot of logging is present to help debug the process. It will be removed as soon the logic is
+// stable. Also, there are a lot of hardcoded values that will be replaced by dynamic ones.
 // Finally, this is generating the default index for the root section, it includes references to all the content in the
 // site.
 // We will also need a similar logic to generate the section index when content is not provided for it.
@@ -152,7 +196,8 @@ func GenHTML() error {
 // Worth mentioning that the partial used to render the content should also be improved to show a nice presentation of
 // the content (image, title, excerpt, etc).
 func genDefaultIndex(pp *hermes.PreProcessor, rootIndexPath, outputPath string, fd []hermes.FileData) error {
-	partial := "layout/default/partials/_index.html"
+	// TODO : Replace this hardoded value by const based generated one
+	partial := filepath.Join("assets", "layout", "default", "partial", "_index.html")
 	log.Printf("using partial template: %s\n", partial)
 
 	partialTmpl, err := template.New("_index.html").ParseFiles(partial)
@@ -213,7 +258,7 @@ func genDefaultIndex(pp *hermes.PreProcessor, rootIndexPath, outputPath string, 
 func processRootSection(contentDir, outputDir, layoutDir string, pp *hermes.PreProcessor) error {
 	log.Println("processing root section")
 
-	indexPath := filepath.Join(hermes.ContentDir, "root", "index.md")
+	indexPath := filepath.Join(hermes.ContentDir, "root", "page", "index.md")
 	outputPath := filepath.Join(hermes.OutputDir, "index.html")
 
 	if !isValidIndex(indexPath, pp) {
@@ -324,92 +369,52 @@ func shouldRender(mdPath, htmlPath string) bool {
 	return markdownInfo.ModTime().After(htmlInfo.ModTime())
 }
 
-// findLayout tries to find the layout file for the given markdown file.
-func findLayout(path string) string {
-	fmt.Println("")
-	fmt.Println("=== findLayout start ===")
+func findLayout(path string) (layout string) {
+	logDebug("")
+	logDebug("=== findLayout start ===")
 	defer func() {
-		fmt.Println("=== findLayout end ===")
-		fmt.Println("")
+		logDebug("=== findLayout end ===")
+		logDebug("")
 	}()
 
-	fmt.Printf("Input path: %s\n", path)
 	path = strings.TrimPrefix(path, "content/")
-	fmt.Printf("Trimmed path: %s\n", path)
-
 	base := filepath.Base(path)
-	fmt.Printf("Base: %s\n", base)
 	base = strings.TrimSuffix(base, filepath.Ext(base))
-	fmt.Printf("Base without extension: %s\n", base)
+	section, contentType := sectionTypeSegments(path)
+	layoutDir := filepath.Join("assets", "layout")
 
-	dir := filepath.Dir(path)
-	fmt.Printf("Directory: %s\n", dir)
-	section, _ := sectionTypeSegments(path)
-	fmt.Printf("Section: %s\n", section)
-
-	secTypeLayoutDir := filepath.Join(hermes.LayoutDir, dir)
-	fmt.Printf("Section type layout directory: %s\n", secTypeLayoutDir)
-
-	secLayoutDir := filepath.Join(hermes.LayoutDir, section)
-	fmt.Printf("Section layout directory: %s\n", secLayoutDir)
+	secLayoutDir := filepath.Join(layoutDir, section)
+	secTypeLayoutDir := filepath.Join(layoutDir, section, contentType)
+	defTypeLayoutDir := filepath.Join(layoutDir, hermes.DefLayoutDir, contentType)
+	defLayoutDir := filepath.Join(layoutDir, hermes.DefLayoutDir)
+	logDebug("section layout directory: " + defLayoutDir)
 
 	layoutPaths := []string{
 		filepath.Join(secTypeLayoutDir, base+".html"),
 		filepath.Join(secTypeLayoutDir, hermes.DefLayout),
+		filepath.Join(secLayoutDir, base+".html"),
 		filepath.Join(secLayoutDir, hermes.DefLayout),
-		filepath.Join(hermes.DefLayoutPath, filepath.Base(dir), hermes.DefLayout),
-		filepath.Join(hermes.DefLayoutPath, base+".html"),
-		filepath.Join(hermes.DefLayoutPath, hermes.DefLayout),
-	}
-	fmt.Printf("Layout paths: %v\n", layoutPaths)
-
-	for _, layoutPath := range layoutPaths {
-		fmt.Printf("Checking layout path: %s\n", layoutPath)
-		if _, err := os.Stat(layoutPath); err == nil {
-			fmt.Printf("Found layout path: %s\n", layoutPath)
-			return layoutPath
-		}
-	}
-
-	fmt.Println("No layout path found")
-	return ""
-}
-
-// findLayout tries to find the layout file for the given markdown file.
-func findLayout2(path string) string {
-	path = strings.TrimPrefix(path, "content/")
-
-	base := filepath.Base(path)
-	base = strings.TrimSuffix(base, filepath.Ext(base))
-	dir := filepath.Dir(path)
-	section, _ := sectionTypeSegments(path)
-
-	secTypeLayoutDir := filepath.Join(hermes.LayoutDir, dir)
-	secLayoutDir := filepath.Join(hermes.LayoutDir, section)
-
-	layoutPaths := []string{
-		filepath.Join(secTypeLayoutDir, base+".html"),
-		filepath.Join(secTypeLayoutDir, hermes.DefLayout),
-		filepath.Join(secLayoutDir, hermes.DefLayout),
-		filepath.Join(hermes.DefLayoutPath, filepath.Base(dir), hermes.DefLayout),
-		filepath.Join(hermes.DefLayoutPath, base+".html"),
-		filepath.Join(hermes.DefLayoutPath, hermes.DefLayout),
+		filepath.Join(defTypeLayoutDir, base+".html"),
+		filepath.Join(defTypeLayoutDir, hermes.DefLayout),
+		filepath.Join(defLayoutDir, base+".html"),
+		filepath.Join(defLayoutDir, hermes.DefLayout),
 	}
 
 	for _, layoutPath := range layoutPaths {
 		if _, err := os.Stat(layoutPath); err == nil {
+			logDebug("found layout path: " + layoutPath)
 			return layoutPath
 		}
 	}
 
-	return ""
+	logDebug("no layout path found")
+	return layout
 }
 
-func sectionTypeSegments(path string) (string, string) {
+func sectionTypeSegments(path string) (sectionSegment string, typeSegment string) {
 	dir := filepath.Dir(path)
 	segments := strings.Split(dir, osFileSep)
 
-	var sectionSegment, typeSegment string
 	if len(segments) > 0 {
 		sectionSegment = segments[0]
 	}
@@ -526,12 +531,16 @@ func startPreProcessor(root string) (*hermes.PreProcessor, error) {
 		return nil, err
 	}
 
-	//pp.Debug()
-
 	return pp, nil
 }
 
 // safeHTML function to replace the anonymous function
 func safeHTML(s string) template.HTML {
 	return template.HTML(s)
+}
+
+func logDebug(msg string) {
+	if debug {
+		log.Println(msg)
+	}
 }

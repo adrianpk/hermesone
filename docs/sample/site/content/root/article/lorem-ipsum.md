@@ -1,11 +1,11 @@
 ---
-title: ""
+title: 'Lorem Ipsum: Dolor Sit Amet'
 description: ""
 filepath: ""
 summary: ""
 date: ""
-published-at: ""
-created-at: "2024-11-15T10:22:35+01:00"
+published-at: "2024-11-01T10:58:21+01:00"
+created-at: "2024-11-15T10:59:47+01:00"
 updated-at: "2024-12-22T09:27:12+01:00"
 type: ""
 section: root
@@ -14,7 +14,7 @@ image: ""
 social-image: ""
 layout: ""
 canonical-url: ""
-locale: ""
+locale: en_US
 robots: ""
 excerpt: ""
 permalink: ""
@@ -32,8 +32,6 @@ sitemap:
     changefreq: ""
 debug: false
 ---
-
-# Lorem Ipsum: Consectetur Adipiscing
 
 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
 
