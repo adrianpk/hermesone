@@ -1,34 +1,43 @@
 ---
-title: "Blog Type"
-description: "Learn about the blog content type."
-summary: "Understand how blog posts are structured and rendered."
+title: Blog Type
+description: Learn about the blog content type.
+filepath: ""
+summary: Understand how blog posts are structured and rendered.
 date: "2024-11-02T12:58:21+01:00"
 published-at: "2024-11-02T12:58:21+01:00"
 created-at: "2024-11-09T12:00:00+01:00"
-updated-at: "2024-11-09T12:00:00+01:00"
-type: "blog"
-section: "root"
-slug: "blog-type"
-image: "blog-type.jpg"
-social-image: "blog-type-social.jpg"
-layout: "default"
-canonical-url: "https://example.com/blog-type"
-locale: "en_US"
-robots: "index, follow"
-excerpt: "Learn about the blog content type."
-permalink: "/blog-type/"
+updated-at: "2024-12-22T09:27:12+01:00"
+type: blog
+section: root
+slug: blog-type
+image: blog-type.jpg
+social-image: blog-type-social.jpg
+layout: default
+canonical-url: https://example.com/blog-type
+locale: en_US
+robots: index, follow
+excerpt: Learn about the blog content type.
+permalink: /blog-type/
 draft: false
 table-of-contents: true
 share: true
 featured: true
 comments: true
-author: ["Adrian PK"]
-categories: ["Content"]
-tags: ["blog", "content type", "structure"]
-keywords: ["blog", "content type", "structure"]
+author:
+    - Adrian PK
+categories:
+    - Content
+tags:
+    - blog
+    - content type
+    - structure
+keywords:
+    - blog
+    - content type
+    - structure
 sitemap:
     priority: 0.8
-    changefreq: "monthly"
+    changefreq: monthly
 debug: false
 ---
 

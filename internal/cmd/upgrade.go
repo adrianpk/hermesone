@@ -13,10 +13,10 @@ func NewUpgradeCmd(layoutFS embed.FS) *cobra.Command {
 		Short: "upgrade the existing layout structure",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			dirs := []string{
-				"layout/default/article",
-				"layout/default/blog",
-				"layout/default/page",
-				"layout/default/series",
+				"assets/layout/default/article",
+				"assets/layout/default/blog",
+				"assets/layout/default/page",
+				"assets/layout/default/series",
 			}
 			return handler.Upgrade(dirs, layoutFS)
 		},

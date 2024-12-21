@@ -36,13 +36,12 @@ func Upgrade(dirs []string, layoutFS embed.FS) error {
 
 	for _, file := range files {
 		//log.Printf("processing file: %s", file)
-
 		if _, err := os.Stat(file); err == nil {
 			timestamp := time.Now().Format("060102150405")
 			ext := filepath.Ext(file)
 			newName := fmt.Sprintf("%s.%s%s", file[:len(file)-len(ext)], timestamp, ext)
 
-			log.Printf("renaming existing file: %s to %s", file, newName)
+			log.Printf("renaming file: %s to %s", file, newName)
 			err = os.Rename(file, newName)
 			if err != nil {
 				return fmt.Errorf("failed to rename file %s to %s: %w", file, newName, err)

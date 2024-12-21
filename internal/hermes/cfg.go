@@ -16,8 +16,8 @@ const (
 type Config struct {
 	Name     string     `yaml:"name"`
 	Git      GitConfig  `yaml:"git"`
-	PubRepo  RepoConfig `yaml:"pubRepo"`
-	BakRepo  RepoConfig `yaml:"bakRepo"`
+	PubRepo  RepoConfig `yaml:"pub-repo"`
+	BakRepo  RepoConfig `yaml:"bak-repo"`
 	Menu     []string   `yaml:"menu"`
 	Sections []Section  `yaml:"sections"`
 }
@@ -73,6 +73,7 @@ func NewCfgFile(name string, user string) error {
 		return err
 	}
 
+	// TODO Replace default values with more meaningful ones.
 	data := Config{
 		Name: name,
 		Git: GitConfig{
@@ -91,11 +92,11 @@ func NewCfgFile(name string, user string) error {
 		Sections: []Section{
 			{
 				Name:         "root",
-				ContentTypes: []string{"articles", "blog", "series"},
+				ContentTypes: []string{"article", "blog", "series"},
 			},
 			{
 				Name:         "section",
-				ContentTypes: []string{"articles", "blog", "series"},
+				ContentTypes: []string{"article", "blog", "series"},
 			},
 		},
 	}

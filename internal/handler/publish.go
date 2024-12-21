@@ -7,6 +7,11 @@ import (
 )
 
 func Publish() error {
+	err := hermes.CheckHermes()
+	if err != nil {
+		return err
+	}
+
 	config, err := hermes.LoadConfig()
 	if err != nil {
 		return err

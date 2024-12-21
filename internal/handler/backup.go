@@ -7,6 +7,11 @@ import (
 )
 
 func Backup() error {
+	err := hermes.CheckHermes()
+	if err != nil {
+		return err
+	}
+
 	config, err := hermes.LoadConfig()
 	if err != nil {
 		log.Fatalf("load config error: %v", err)

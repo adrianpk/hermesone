@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"sort"
@@ -43,7 +44,7 @@ func NewPreProcessor(root string) *PreProcessor {
 
 // Build builds the cache from the given root directory
 func (pp *PreProcessor) Build() error {
-	fmt.Printf("building cache: %s\n", pp.Root)
+	log.Printf("building cache: %s\n", pp.Root)
 	err := filepath.Walk(pp.Root, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -52,20 +53,20 @@ func (pp *PreProcessor) Build() error {
 		if !info.IsDir() && filepath.Ext(path) == ".md" {
 			fileContent, err := os.ReadFile(path)
 			if err != nil {
-				fmt.Printf("error reading file: %s\n", err)
+				log.Printf("error reading file: %s\n", err)
 				return err
 			}
 
 			parts := bytes.SplitN(fileContent, []byte("\n---\n"), 2)
 			if len(parts) < 2 {
-				fmt.Printf("invalid frontmatter format in file: %s\n", path)
+				log.Printf("invalid frontmatter format in file: %s\n", path)
 				return fmt.Errorf("invalid frontmatter format in file: %s", path)
 			}
 
 			var meta Meta
 			err = yaml.Unmarshal(parts[0], &meta)
 			if err != nil {
-				fmt.Printf("error unmarshalling frontmatter: %s\n", err)
+				log.Printf("error unmarshalling frontmatter: %s\n", err)
 				return err
 			}
 
@@ -80,7 +81,7 @@ func (pp *PreProcessor) Build() error {
 
 			relativePath, err := filepath.Rel(pp.Root, path)
 			if err != nil {
-				fmt.Printf("error getting relative path: %s\n", err)
+				log.Printf("error getting relative path: %s\n", err)
 				return err
 			}
 
@@ -125,7 +126,7 @@ func (pp *PreProcessor) GetPublishedContent() []FileData {
 func (pp *PreProcessor) Debug() {
 	prettyJSON, err := json.MarshalIndent(pp.Data, "", "  ")
 	if err != nil {
-		fmt.Println("failed to generate debug output:", err)
+		log.Printf("failed to generate debug output: %v", err)
 		return
 	}
 	fmt.Println(string(prettyJSON))
@@ -170,7 +171,6 @@ func (pp *PreProcessor) Sync() error {
 			updated = true
 		}
 
-		// Update the section accordingly without writing the file again
 		sectionUpdated := pp.updateSection(filePath, &fileData.Meta)
 		if sectionUpdated {
 			updated = true
@@ -197,7 +197,7 @@ func (pp *PreProcessor) Sync() error {
 
 			pp.Data[path] = fileData
 
-			fmt.Printf("updated file: %s\n", filePath)
+			log.Printf("updated file: %s", filePath)
 		}
 
 		if fileData.Published {
@@ -230,7 +230,7 @@ func (pp *PreProcessor) Sync() error {
 	//pp.PrintByTags()
 
 	pp.sortByIndex()
-	// pp.PrintByIndex()
+	//pp.PrintByIndex()
 
 	return nil
 }
@@ -369,6 +369,26 @@ func (pp *PreProcessor) sortByTags() {
 func (pp *PreProcessor) sortByIndex() {
 	var indexPages []FileData
 	for path, fileData := range pp.Data {
+		if strings.HasSuffix(path, IndexMdFile) {
+			if fileData.Meta.IsIndex() {
+				if isPublicable(fileData) {
+					fileData.Meta.FilePath = path
+					indexPages = append(indexPages, fileData)
+				}
+			}
+		}
+	}
+
+	sortFileData(indexPages)
+	pp.ByPath = make(map[string]FileData)
+	for _, file := range indexPages {
+		pp.ByPath[file.Meta.Title] = file
+	}
+}
+
+func (pp *PreProcessor) sortByIndex2() {
+	var indexPages []FileData
+	for path, fileData := range pp.Data {
 		if strings.HasSuffix(path, IndexMdFile) && fileData.Meta.IsIndex() && isPublicable(fileData) {
 			fileData.Meta.FilePath = path
 			indexPages = append(indexPages, fileData)
@@ -399,24 +419,24 @@ func sortFileData(files []FileData) {
 
 // PrintBySection prints the sorted items by section
 func (pp *PreProcessor) PrintBySection() {
-	fmt.Println("sorted by section:")
+	log.Println("sorted by section:")
 	for section, files := range pp.BySection {
-		fmt.Printf("section: %s\n", section)
+		log.Printf("section: %s\n", section)
 		for _, file := range files {
-			fmt.Printf("  file: %s, published at: %s\n", file.Meta.Title, file.Meta.PublishedAt)
+			log.Printf("  file: %s, published at: %s\n", file.Meta.Title, file.Meta.PublishedAt)
 		}
 	}
 }
 
 // PrintBySectionType prints the sorted items by section type
 func (pp *PreProcessor) PrintBySectionType() {
-	fmt.Println("sorted by Section type:")
+	log.Println("sorted by Section type:")
 	for section, types := range pp.BySectionType {
-		fmt.Printf("section: %s\n", section)
+		log.Printf("section: %s\n", section)
 		for sectionType, files := range types {
-			fmt.Printf("  type: %s\n", sectionType)
+			log.Printf("  type: %s\n", sectionType)
 			for _, file := range files {
-				fmt.Printf("    file: %s, published at: %s\n", file.Meta.Title, file.Meta.PublishedAt)
+				log.Printf("    file: %s, published at: %s\n", file.Meta.Title, file.Meta.PublishedAt)
 			}
 		}
 	}
@@ -424,20 +444,20 @@ func (pp *PreProcessor) PrintBySectionType() {
 
 // PrintByTags prints the sorted items by tags
 func (pp *PreProcessor) PrintByTags() {
-	fmt.Println("sorted by tags:")
+	log.Println("sorted by tags:")
 	for tag, files := range pp.ByTags {
-		fmt.Printf("tag: %s\n", tag)
+		log.Printf("tag: %s\n", tag)
 		for _, file := range files {
-			fmt.Printf("  file: %s, published at: %s\n", file.Meta.Title, file.Meta.PublishedAt)
+			log.Printf("  file: %s, published at: %s\n", file.Meta.Title, file.Meta.PublishedAt)
 		}
 	}
 }
 
 // PrintByIndex prints the sorted index pages
 func (pp *PreProcessor) PrintByIndex() {
-	fmt.Println("sorted index pages:")
+	log.Println("sorted index pages:")
 	for _, file := range pp.ByPath {
-		fmt.Printf("  file: %s, published at: %s, path: %s\n", file.Meta.Title, file.Meta.PublishedAt, file.Meta.FilePath)
+		log.Printf("  file: %s, published at: %s, path: %s\n", file.Meta.Title, file.Meta.PublishedAt, file.Meta.FilePath)
 	}
 }
 

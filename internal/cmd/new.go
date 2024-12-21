@@ -36,8 +36,9 @@ After running the command, the following file structure will be created:
 
 content/
 └── guides/
-    └── article/
-        └── how-to-create-new-content-in-hermes.md
+
+	└── article/
+	    └── how-to-create-new-content-in-hermes.md
 
 Resulting Markdown File:
 
@@ -73,11 +74,11 @@ func NewNewCmd() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			log.Println("Creating new content...")
 			if name == "" {
-				log.Println("Error: name is required")
+				log.Println("error: name is required")
 				return
 			}
 
-			section :=  hermes.ValidSectionOrDef(section)
+			section := hermes.ValidSectionOrDef(section)
 			contentType := hermes.ValidTypeOrDef(contentType)
 			slug := strings.ToLower(strings.ReplaceAll(name, " ", "-"))
 			fileName := fmt.Sprintf("%s.md", slug)
@@ -86,7 +87,7 @@ func NewNewCmd() *cobra.Command {
 
 			err := ensureDir(dirPath)
 			if err != nil {
-				log.Fatalf("Error: failed to create directories: %v", err)
+				log.Fatalf("error: failed to create directories: %v", err)
 			}
 
 			now := time.Now().Format("2006-01-02")
