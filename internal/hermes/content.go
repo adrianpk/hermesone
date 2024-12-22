@@ -42,7 +42,7 @@ type Meta struct {
 	Type            string   `yaml:"type"`         // Type of the content
 	Section         string   `yaml:"section"`      // Section of the content
 	Slug            string   `yaml:"slug"`         // Slug of the content
-	Image           string   `yaml:"image"`        // Image of the content
+	HeaderImage     string   `yaml:"header-image"` // HeaderImage of the content
 	SocialImage     string   `yaml:"social-image"` // Social image of the content
 	Layout          string   `yaml:"layout"`
 	CanonicalURL    string   `yaml:"canonical-url"`

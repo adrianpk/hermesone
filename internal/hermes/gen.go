@@ -32,6 +32,7 @@ func Parse(content []byte, path string) (Content, error) {
 	md := parsed.Markdown
 
 	renderer := NewTailwindRenderer(path)
+
 	parsed.HTML = string(blackfriday.Run(md, blackfriday.WithRenderer(renderer)))
 	return parsed, nil
 }

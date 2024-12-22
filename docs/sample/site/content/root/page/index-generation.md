@@ -60,9 +60,3 @@ Hermes will support customizable pagination parameters. This will give users mor
 - **Manual Index**: Create an `index.md` file with a past publishing date and not marked as a draft to use it as the index page.
 - **Automatic Index**: If no `index.md` is available or published, Hermes generates an index page with a paginated list of content.
 - **Future Enhancements**: Customizable layout and pagination parameters are planned for future updates.
-
----
-
-This document provides an overview of how index generation works in Hermes.
-
----

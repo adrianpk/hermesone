@@ -12,6 +12,7 @@ const (
 	IndexMdFile  = "index.md"
 	IndexFile    = "index.html"
 	DefLayout    = "default.html"
+	DefHeaderImg = "header.png"
 	NoJekyllFile = ".nojekyll"
 )
 

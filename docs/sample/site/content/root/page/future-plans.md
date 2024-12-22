@@ -66,9 +66,3 @@ We welcome contributions from the community and plan to incorporate feedback and
 ## Index Generation Enhancements
 
 We plan to enhance the index generation feature, including customizable layouts for the automatically generated index pages and more control over pagination parameters.
-
----
-
-Stay tuned for updates and feel free to contribute or provide feedback!
-
----

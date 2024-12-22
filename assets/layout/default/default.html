@@ -43,6 +43,9 @@
         Published: {{.Meta.PublishedAtPretty}} |
         Last Modified: {{.Meta.UpdatedAtPretty}}
     </p>
+    {{if .Meta.HeaderImage}}
+    <img class="block mx-auto my-8 bg-gray-200 transition duration-300" src="{{.Meta.HeaderImage}}" alt="Header Image">
+    {{end}}
     <!-- <div class="mb-8 text-center"> -->
     <!--     <strong>Categories:</strong> {{range .Meta.Categories}}{{.}},{{end}}<br> -->
     <!--     <strong>Tags:</strong> {{range .Meta.Tags}}{{.}},{{end}} -->
@@ -53,11 +56,11 @@
 </main>
 <footer class="flex items-center justify-between p-6 bg-white border-t border-gray-200">
     <div>
-        &copy; 2024 {{.Meta.Title}} - Series
+        &copy; 2024 {{.Meta.Title}}
     </div>
     {{ if .Meta.Debug }}
     <div>
-        Powered by Hermes - Default |
+        Powered by Hermes |
         Type: {{.Meta.Type}} |
         Section: {{.Meta.Section}} |
         Sitemap Priority: {{.Meta.Sitemap.Priority}} |

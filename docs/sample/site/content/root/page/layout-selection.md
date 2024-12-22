@@ -69,8 +69,3 @@ This flexible layout selection logic allows you to customize the appearance of y
 
 **This may sound overwhelming, but remember, you can rely on the defaults to start and customize later as needed. Most of the time you won't need this granular control.**
 
----
-
-This document explains the layout selection logic used in Hermes.
-
----

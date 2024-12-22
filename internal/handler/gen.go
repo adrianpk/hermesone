@@ -139,7 +139,6 @@ func GenHTML() error {
 		return fmt.Errorf("error adding .nojekyll file: %w", err)
 	}
 
-	// Copy the assets/css directory to the output/css directory
 	err = copyCSS("assets/css", filepath.Join(hermes.OutputDir, "css"))
 	if err != nil {
 		return fmt.Errorf("error copying CSS directory: %w", err)

@@ -55,9 +55,3 @@ Sometimes we want to group articles in series, such as a guide, a tutorial, or a
 
 - `content/root/about-us.md` will be rendered as `domain.tld/about-us.html`.
 - `content/guides/article.md` will be rendered as `domain.tld/guides/article.html`.
-
----
-
-This document provides an overview of the different content types supported by Hermes.
-
----

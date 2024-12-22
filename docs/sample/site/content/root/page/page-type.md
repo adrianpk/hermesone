@@ -52,11 +52,3 @@ Pages are a content type similar to articles but are not included in indexes. Th
 - **Shared Space**: Pages share the same space as articles but are used for less important content.
 
 For organizational purposes, pages are stored in the `root` directory or the respective section directory, but the content is rendered directly under the domain or section.
-
----
-
-*Thank you for choosing Hermes!*
-
----
-
-*This document was generated using Hermes.*

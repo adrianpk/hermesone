@@ -78,9 +78,3 @@ In `article.md`, you can reference `example.png` as follows:
 Hermes will handle copying the image and updating the path in the generated HTML.
 
 This approach helps keep your images organized and ensures that they are easily accessible and correctly linked in your site.
-
----
-
-This document explains how image storage and path rewriting are handled in Hermes.
-
----
