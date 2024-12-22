@@ -56,7 +56,7 @@
     </div>
     {{ if .Meta.Debug }}
     <div>
-        Powered by Hermes - Default |
+        Powered by Hermes |
         Type: {{.Meta.Type}} |
         Section: {{.Meta.Section}} |
         Sitemap Priority: {{.Meta.Sitemap.Priority}} |

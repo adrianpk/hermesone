@@ -50,11 +50,3 @@ Thank you for your interest in **Hermes**. If you have any questions, need suppo
 For more information and updates, visit our [GitHub repository](https://github.com/adrianpk/hermes).
 
 You can also contact us via email at: hermes at adrianpk dot com.
-
----
-
-*Thank you for choosing Hermes!*
-
----
-
-*This document was generated using Hermes.*

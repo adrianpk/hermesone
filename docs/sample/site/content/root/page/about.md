@@ -61,11 +61,3 @@ Hermes is an opinionated static site generator. It aims to be the simplest syste
 ## Current State
 
 Hermes is a work in progress. There are many tests to run and details to refine, but the foundation is set.
-
----
-
-*Thank you for choosing Hermes!*
-
----
-
-*This document was generated using Hermes.*

@@ -52,11 +52,11 @@
 </main>
 <footer class="flex items-center justify-between p-6 bg-white border-t border-gray-200">
     <div>
-        &copy; 2024 {{.Meta.Title}} - Series
+        &copy; 2024 {{.Meta.Title}}
     </div>
     {{ if .Meta.Debug }}
     <div>
-        Powered by Hermes - Default |
+        Powered by Hermes |
         Type: {{.Meta.Type}} |
         Section: {{.Meta.Section}} |
         Sitemap Priority: {{.Meta.Sitemap.Priority}} |

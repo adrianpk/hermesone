@@ -86,9 +86,3 @@ $ hermes backup
 ```
 
 Worth mentioning that content is versioned in a different repository than the final HTML content.
-
----
-
-This document provides a detailed guide to the commands available in Hermes.
-
----

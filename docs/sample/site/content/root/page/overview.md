@@ -54,9 +54,3 @@ Hermes is a static site generator (SSG) designed to help you create fast, secure
 - **Scalability**: Static sites can be served from a CDN, improving global reach.
 
 For more details on how to get started with Hermes, refer to the [Commands](commands.md) section.
-
----
-
-This document provides an overview of Hermes and its key features.
-
----

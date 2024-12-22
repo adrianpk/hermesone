@@ -176,6 +176,11 @@ func (pp *PreProcessor) Sync() error {
 			updated = true
 		}
 
+		headerUpdated := pp.updateHeader(filePath, &fileData.Meta)
+		if headerUpdated {
+			updated = true
+		}
+
 		if updated {
 			var frontmatter bytes.Buffer
 			err = yaml.NewEncoder(&frontmatter).Encode(fileData.Meta)
@@ -252,6 +257,29 @@ func (pp *PreProcessor) updateSection(mdPath string, meta *Meta) bool {
 	}
 
 	return false
+}
+
+func (pp *PreProcessor) updateHeader(mdPath string, meta *Meta) bool {
+	if meta.HeaderImage != "" {
+		return false
+	}
+
+	imageDir := strings.TrimSuffix(mdPath, filepath.Ext(mdPath))
+	headerImagePath := filepath.Join(imageDir, DefHeaderImg)
+
+	_, err := os.Stat(headerImagePath)
+	if os.IsNotExist(err) {
+		return false
+	}
+
+	relativeImagePath := strings.TrimPrefix(headerImagePath, pp.Root+"/")
+	parts := strings.Split(relativeImagePath, string(os.PathSeparator))
+	if len(parts) > 2 {
+		relativeImagePath = filepath.Join(parts[len(parts)-2], parts[len(parts)-1])
+	}
+
+	meta.HeaderImage = relativeImagePath
+	return true
 }
 
 func (pp *PreProcessor) GetAllPublishedPaginated(page, pageSize int) ([]FileData, error) {
