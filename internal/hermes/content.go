@@ -3,8 +3,11 @@ package hermes
 import (
 	"errors"
 	"log"
+	"strings"
 	"time"
 )
+
+const avgReadSpeed = 201
 
 var (
 	validTypes = map[string]bool{
@@ -42,6 +45,7 @@ type Meta struct {
 	Type            string   `yaml:"type"`         // Type of the content
 	Section         string   `yaml:"section"`      // Section of the content
 	Slug            string   `yaml:"slug"`         // Slug of the content
+	ReadTime        int      `yaml:"read_time"`    // Read time of the content
 	HeaderImage     string   `yaml:"header-image"` // HeaderImage of the content
 	SocialImage     string   `yaml:"social-image"` // Social image of the content
 	Layout          string   `yaml:"layout"`
@@ -180,4 +184,21 @@ func (m Meta) UpdatedAtPretty() string {
 	}
 
 	return updatedAt.Format("January 2, 2006 15:04")
+}
+
+// UpdateReadTime updates the ReadTime property and
+// returns true if the value has changed.
+func (m *Meta) UpdateReadTime(content string) bool {
+	wordCount := len(strings.Fields(content))
+	newReadTime := wordCount / avgReadSpeed
+	if newReadTime == 0 && wordCount > 0 {
+		newReadTime = 1
+	}
+
+	if m.ReadTime != newReadTime {
+		m.ReadTime = newReadTime
+		return true
+	}
+
+	return false
 }

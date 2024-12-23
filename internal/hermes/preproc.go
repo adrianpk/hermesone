@@ -70,9 +70,12 @@ func (pp *PreProcessor) Build() error {
 				return err
 			}
 
+			content := string(parts[1])
+			meta.UpdateReadTime(content)
+
 			fileData := FileData{
 				Meta:      meta,
-				Content:   string(parts[1]),
+				Content:   content,
 				CreatedAt: info.ModTime().Format(time.RFC3339),
 				UpdatedAt: info.ModTime().Format(time.RFC3339),
 			}
