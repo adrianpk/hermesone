@@ -10,6 +10,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/yosssi/gohtml"
+
 	"github.com/adrianpk/gohermes/internal/hermes"
 )
 
@@ -79,6 +81,9 @@ func GenHTML() error {
 						return nil
 					}
 
+					gohtml.Condense = true
+					formattedHTML := gohtml.Format(tmplBuf.String())
+
 					err = os.MkdirAll(filepath.Dir(outputPath), os.ModePerm)
 					if err != nil {
 						log.Printf("error creating directories for %s: %v", outputPath, err)
@@ -92,7 +97,7 @@ func GenHTML() error {
 					}
 					defer outputFile.Close()
 
-					_, err = tmplBuf.WriteTo(outputFile)
+					_, err = outputFile.WriteString(formattedHTML)
 					if err != nil {
 						log.Printf("error writing to output file %s: %v", outputPath, err)
 						return nil
