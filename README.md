@@ -4,6 +4,8 @@
 
 This document is a work in progress. It serves as a way to capture ideas, behaviors, features, and other relevant information about Hermes. The content here is subject to change and will be polished and organized in a better way later.
 
+The name change (from **hermes** to **hermesone**) is intentional. As the project has evolved, I started considering a more general approach, less tightly integrated with my personal editor workflow. The new project, currently in development, is located at the original repository address: https://github.com/adrianpk/hermes. Hermes One will remain as the legacy version; the original repository will host the new project.
+
 ## Overview
 
 Hermes is a static site generator (SSG) designed to help you create fast, secure, and easily maintainable websites. It takes your content written in Markdown and transforms it into a static website using predefined layouts and templates.
